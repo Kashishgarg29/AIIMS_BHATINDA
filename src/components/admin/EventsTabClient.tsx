@@ -21,7 +21,7 @@ type EventType = {
 
 export function EventsTabClient({ events }: { events: EventType[] }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL"|"UPCOMING"|"ACTIVE (TODAY)"|"PAST">("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "UPCOMING" | "ACTIVE (TODAY)" | "PAST">("ALL");
 
   // Filter logic
   const filteredEvents = events.filter(event => {
@@ -29,7 +29,7 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
     evDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     let dynamicStatus = "UPCOMING";
     if (evDate.getTime() === today.getTime()) {
       dynamicStatus = "ACTIVE (TODAY)";
@@ -44,7 +44,7 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
     const srch = searchQuery.toLowerCase();
     if (srch && !event.schoolDetails.toLowerCase().includes(srch)) return false;
 
-    return true; 
+    return true;
   });
 
   const getDynamicStatus = (date: Date) => {
@@ -52,7 +52,7 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
     evDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (evDate.getTime() === today.getTime()) {
       return "ACTIVE (TODAY)";
     } else if (evDate < today) {
@@ -65,27 +65,27 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
         <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Platform Events</h2>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
           <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              type="text" 
-              placeholder="Search schools..." 
+            <Input
+              type="text"
+              placeholder="Search schools..."
               className="pl-10 w-full sm:w-64 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="w-px h-8 bg-slate-200 hidden sm:block mx-1"></div>
-          
+
           <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto justify-start">
             {["ALL", "ACTIVE (TODAY)", "UPCOMING", "PAST"].map(f => (
-              <Button 
-                key={f} 
-                variant={statusFilter === f ? "default" : "outline"} 
-                size="sm" 
+              <Button
+                key={f}
+                variant={statusFilter === f ? "default" : "outline"}
+                size="sm"
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onClick={() => setStatusFilter(f as any)}
                 className={`whitespace-nowrap transition-all rounded-full ${statusFilter === f ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
@@ -108,21 +108,20 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
         <div className="flex flex-col gap-3">
           {filteredEvents.map(event => {
             const dynamicStatus = getDynamicStatus(event.eventDate);
-            
+
             return (
               <Link href={`/admin/events/${event.id}`} key={event.id} className="group">
                 <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden relative">
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${dynamicStatus.includes("ACTIVE") ? 'bg-emerald-500' : dynamicStatus === "PAST" ? 'bg-slate-300' : 'bg-emerald-500'}`} />
-                  
+
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 flex-1 pl-3 w-full">
                     <div className="min-w-[140px]">
-                      <Badge className={`px-2.5 py-1 text-xs font-semibold rounded-full mb-1 border ${
-                        dynamicStatus.includes("ACTIVE") 
-                          ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' 
-                          : dynamicStatus === "PAST" 
-                            ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200' 
-                            : 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200'
-                      }`}>
+                      <Badge className={`px-2.5 py-1 text-xs font-semibold rounded-full mb-1 border ${dynamicStatus.includes("ACTIVE")
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200'
+                        : dynamicStatus === "PAST"
+                          ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                          : 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200'
+                        }`}>
                         {dynamicStatus}
                       </Badge>
                       <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1.5">
@@ -135,7 +134,7 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
                       <h3 className="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors truncate">
                         {event.schoolDetails}
                       </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 font-bold uppercase tracking-tighter text-[10px]">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 font-bold uppercase tracking-tighter text-sm">
                         <div className="flex items-center gap-1 text-slate-500">
                           <span className="text-emerald-600">POC:</span>
                           <span className="text-slate-700 truncate max-w-[120px]">{event.pocName}</span>
@@ -149,35 +148,29 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
 
                     <div className="flex items-center gap-6 mt-3 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none">
                       <div className="flex items-center gap-2">
-                        <div className="bg-white sm:bg-slate-100 p-1.5 rounded-full border border-slate-100 sm:border-slate-200">
-                          <Users className="h-4 w-4 text-slate-500" />
-                        </div>
-                        <div className="flex flex-col items-start leading-tight">
-                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Students</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Students:</span>
                           <span className="text-sm font-bold text-slate-700">{event._count.students}</span>
                         </div>
                       </div>
-                      
-                      <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-                      
+
+                      <div className="w-px h-4 sm:h-6 bg-slate-200 hidden sm:block"></div>
+
                       <div className="flex items-center gap-2">
-                        <div className="bg-white sm:bg-slate-100 p-1.5 rounded-full border border-slate-100 sm:border-slate-200">
-                          <Users className="h-4 w-4 text-emerald-500" />
-                        </div>
-                        <div className="flex flex-col items-start leading-tight">
-                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Staff</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Staff:</span>
                           <span className="text-sm font-bold text-slate-700">{event._count.eventStaff}</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     {dynamicStatus === "UPCOMING" && (
-                      <EventManagementActions 
-                        eventId={event.id} 
-                        currentDate={event.eventDate} 
-                        status={event.status} 
+                      <EventManagementActions
+                        eventId={event.id}
+                        currentDate={event.eventDate}
+                        status={event.status}
                       />
                     )}
                     <div className="hidden sm:flex items-center justify-center p-2">

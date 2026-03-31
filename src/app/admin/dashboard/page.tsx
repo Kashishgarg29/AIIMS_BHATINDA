@@ -39,67 +39,80 @@ export default async function AdminDashboard() {
   const enrichedEvents = allEvents.map((event: any) => {
     const eventHeadId = (event.formConfig as any)?.eventHeadId;
     const eventHead = (event.eventStaff as any[]).find((s: any) => s.user.id === eventHeadId)?.user?.fullName || "Not Assigned";
-    
+
     return {
       ...event,
-      pocName: event.pocName, 
+      pocName: event.pocName,
       eventHeadName: eventHead
     };
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       <RealTimeRefresher />
       <Navbar role={session?.user?.role || "ADMIN"} userName={session?.user?.name || "Admin User"} />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Admin Portal</h1>
-            <p className="text-slate-500">Manage health camps, users, and incoming requests.</p>
+      <Tabs defaultValue="requests" orientation="vertical" className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Left Full Sidebar */}
+        <aside className="w-full md:w-64 bg-white border-r flex-shrink-0">
+          <div className="py-4 md:py-6 h-full flex flex-col pr-4 md:pr-0">
+            <div className="px-6 mb-4 hidden md:block">
+              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Menu</h2>
+            </div>
+            <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 justify-start items-stretch shrink-0 space-y-1">
+              <TabsTrigger value="requests" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+                <FileText className="h-5 w-5 shrink-0" /> <span className="truncate">Camp Requests</span>
+                {pendingRequests.length > 0 && (
+                  <Badge variant="destructive" className="ml-auto rounded-full px-1.5 h-5 bg-emerald-600 hover:bg-emerald-700 text-white border-0 flex-shrink-0">
+                    {pendingRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="events" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+                <CalendarPlus className="h-5 w-5 shrink-0" /> <span className="truncate">All Events</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+                <Users className="h-5 w-5 shrink-0" /> <span className="truncate">Directory</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
-          <CreateEventButton
-            medicalStaff={medicalStaff}
-          />
-        </div>
+        </aside>
 
-        <Tabs defaultValue="requests" className="space-y-4">
-          <TabsList className="bg-white border w-full justify-start h-14 p-0 rounded-md overflow-hidden">
-            <TabsTrigger value="requests" className="h-full px-8 text-base data-[state=active]:!text-emerald-600 data-[state=active]:!font-semibold flex gap-2 rounded-none transition-all">
-              <FileText className="h-5 w-5" /> Camp Requests
-              {pendingRequests.length > 0 && (
-                <Badge variant="destructive" className="ml-1 rounded-full px-1.5 h-5 bg-emerald-600 hover:bg-emerald-700 text-white border-0">
-                  {pendingRequests.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="events" className="h-full px-8 text-base data-[state=active]:!text-emerald-600 data-[state=active]:!font-semibold flex gap-2 rounded-none transition-all">
-              <CalendarPlus className="h-5 w-5" /> All Events
-            </TabsTrigger>
-            <TabsTrigger value="users" className="h-full px-8 text-base data-[state=active]:!text-emerald-600 data-[state=active]:!font-semibold flex gap-2 rounded-none transition-all">
-              <Users className="h-5 w-5" /> Directory
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content Area */}
+        <main className="flex-1 w-full overflow-y-auto p-4 md:p-8 bg-slate-50">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-start md:items-center mb-8 flex-col md:flex-row gap-4">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Admin Portal</h1>
+                <p className="text-slate-500 mt-1">Manage health camps, users, and incoming requests.</p>
+              </div>
+              <CreateEventButton
+                medicalStaff={medicalStaff}
+              />
+            </div>
 
-          <TabsContent value="requests" className="space-y-4 pt-4">
-            <h2 className="text-xl font-semibold mb-4">Incoming Camp Requests</h2>
-            <RequestsTabClient
-              requests={pendingRequests}
-              medicalStaff={medicalStaff}
-            />
-          </TabsContent>
+            <div className="w-full pb-12">
+              <TabsContent value="requests" className="mt-0 space-y-4 outline-none">
+                <h2 className="text-xl font-semibold mb-4 text-slate-800 hidden md:block">Incoming Camp Requests</h2>
+                <RequestsTabClient
+                  requests={pendingRequests}
+                  medicalStaff={medicalStaff}
+                />
+              </TabsContent>
 
-          <TabsContent value="events" className="pt-4">
-            <EventsTabClient events={enrichedEvents as any} />
-          </TabsContent>
+              <TabsContent value="events" className="mt-0 outline-none">
+                <EventsTabClient events={enrichedEvents as any} />
+              </TabsContent>
 
-          <TabsContent value="users" className="pt-4">
-            <StaffDirectoryClient 
-              medicalStaff={medicalStaff as any} 
-            />
-          </TabsContent>
-        </Tabs>
-      </main>
+              <TabsContent value="users" className="mt-0 outline-none">
+                <StaffDirectoryClient
+                  medicalStaff={medicalStaff as any}
+                />
+              </TabsContent>
+            </div>
+          </div>
+        </main>
+      </Tabs>
     </div>
   );
 }

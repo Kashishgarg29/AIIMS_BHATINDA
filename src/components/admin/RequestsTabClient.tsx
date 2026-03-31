@@ -55,7 +55,7 @@ export function RequestsTabClient({
       console.log("Submitting acceptance for:", acceptRequest.id);
       const result = await acceptCampRequest(acceptRequest.id, selectedStaff);
       console.log("Accept result:", result);
-      
+
       if (result.success) {
         setAcceptRequest(null);
         setSelectedStaff([]);

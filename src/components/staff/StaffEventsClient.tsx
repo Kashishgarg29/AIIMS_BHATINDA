@@ -1,11 +1,10 @@
 "use client";
 
+import { CalendarDays, MapPin, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, MapPin, LayoutGrid, List, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 
@@ -23,34 +22,12 @@ type AssignedEventType = {
 };
 
 export function StaffEventsClient({ events }: { events: AssignedEventType[] }) {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   return (
     <div className="space-y-6">
       <RealTimeRefresher />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Assigned Events</h2>
-
-        <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className={`rounded-full px-4 flex items-center gap-2 ${viewMode === "grid" ? 'bg-white shadow-sm text-emerald-600 font-medium' : 'text-slate-500 hover:text-slate-900'}`}
-          >
-            <LayoutGrid className="h-4 w-4" />
-            <span className="hidden sm:inline">Grid</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className={`rounded-full px-4 flex items-center gap-2 ${viewMode === "list" ? 'bg-white shadow-sm text-emerald-600 font-medium' : 'text-slate-500 hover:text-slate-900'}`}
-          >
-            <List className="h-4 w-4" />
-            <span className="hidden sm:inline">List</span>
-          </Button>
-        </div>
       </div>
 
       {events.length === 0 ? (
@@ -58,96 +35,6 @@ export function StaffEventsClient({ events }: { events: AssignedEventType[] }) {
           <CalendarDays className="h-16 w-16 mx-auto mb-6 text-slate-300" />
           <h3 className="text-xl font-bold text-slate-900 mb-2">No Events Assigned</h3>
           <p className="text-slate-600 max-w-sm mx-auto">You currently have no health camp events assigned to you.</p>
-        </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map(event => (
-            <Link href={`/staff/workspace/${event.id}`} key={event.id} className="group">
-              <Card className="h-full flex flex-col border border-slate-200 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden rounded-xl">
-                <div className={`h-2 w-full ${event.status === "ACTIVE" ? 'bg-emerald-500' : event.status === "PAST" ? 'bg-slate-400' : 'bg-emerald-500'}`} />
-                <CardHeader className="pb-3 flex-1 px-6 pt-5">
-                  <div className="flex justify-between items-center mb-4">
-                    <Badge className={`px-3 py-1 font-semibold tracking-wide rounded-full ${event.status === "ACTIVE"
-                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-emerald-200'
-                      : event.status === "PAST"
-                        ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
-                        : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-emerald-200'
-                      }`}>
-                      {event.status}
-                    </Badge>
-                    <div className="flex items-center gap-2">
-                      {event.referredCount > 0 && (
-                        <div onClick={e => e.stopPropagation()}>
-                          <Dialog>
-                            <DialogTrigger onClick={e => e.preventDefault()} className="cursor-pointer text-xs font-bold text-red-700 bg-red-50 px-2.5 py-1.5 rounded-full border border-red-200 hover:bg-red-100 transition-colors">
-                              {event.referredCount} Referred
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col pt-6 pb-2 px-1 rounded-xl">
-                              <DialogHeader className="px-5">
-                                <DialogTitle className="text-xl font-bold text-red-700">Referred Students — {event.schoolName}</DialogTitle>
-                                <DialogDescription>Students with at least one Referred (R) department assessment.</DialogDescription>
-                              </DialogHeader>
-                              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2 mt-2">
-                                {event.referredStudents.map(stud => (
-                                  <Link href={`/staff/workspace/${event.id}/student/${stud.id}`} key={stud.id} className="block">
-                                    <div className="bg-red-50 p-3 rounded-xl border border-red-100 hover:bg-red-100 flex justify-between items-center group shadow-sm">
-                                      <div>
-                                        <p className="font-bold text-slate-900">{stud.name}</p>
-                                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-1">{stud.classSec}</p>
-                                        <div className="flex flex-wrap gap-1">
-                                          {stud.depts.map((d: string) => (
-                                            <span key={d} className="text-[9px] font-bold bg-red-200 text-red-800 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{d}</span>
-                                          ))}
-                                        </div>
-                                      </div>
-                                      <ArrowRight className="h-4 w-4 text-red-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all" />
-                                    </div>
-                                  </Link>
-                                ))}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      )}
-                      <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-                        {event.studentCount} Students
-                      </span>
-                    </div>
-                  </div>
-                  <CardTitle className="text-2xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors leading-tight mb-2 flex items-start justify-between">
-                    <span className="line-clamp-2 pr-4">{event.schoolName}</span>
-                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-emerald-600 transition-colors shrink-0 mt-0.5 group-hover:translate-x-1" />
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm font-medium text-slate-500 mt-2">
-                    <div className="bg-slate-100 p-1.5 rounded-md">
-                      <MapPin className="h-4 w-4 text-slate-500" />
-                    </div>
-                    {event.location}
-                  </CardDescription>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                      <span className="text-emerald-600 uppercase tracking-tighter">POC:</span>
-                      <span className="truncate">{event.pocName}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                      <span className="text-amber-600 uppercase tracking-tighter">Head:</span>
-                      <span className="truncate">{event.eventHeadName}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-6 pb-6 pt-2">
-                  <div className="flex items-center gap-2.5 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100 group-hover:bg-emerald-50/50 transition-colors">
-                    <div className="bg-white p-2 rounded-full shadow-sm border border-slate-100">
-                      <CalendarDays className="h-4 w-4 text-emerald-500" />
-                    </div>
-                    <span className="font-bold text-slate-700">
-                      {event.date.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
         </div>
       ) : (
         <div className="flex flex-col gap-3">

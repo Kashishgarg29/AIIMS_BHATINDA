@@ -98,7 +98,6 @@ export default async function AdminDashboard() {
 
             <div className="w-full pb-12">
               <TabsContent value="requests" className="mt-0 space-y-4 outline-none">
-                <h2 className="text-xl font-semibold mb-4 text-slate-800 hidden md:block">Incoming Camp Requests</h2>
                 <RequestsTabClient
                   requests={pendingRequests}
                   medicalStaff={medicalStaff}

@@ -68,7 +68,6 @@ export function EventManagementActions({
         }}
         className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 h-8 font-semibold"
       >
-        <CalendarDays className="h-4 w-4 mr-2" />
         Reschedule
       </Button>
 
@@ -82,7 +81,6 @@ export function EventManagementActions({
         }}
         className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 h-8 font-semibold"
       >
-        <XCircle className="h-4 w-4 mr-2" />
         Cancel
       </Button>
 

@@ -36,6 +36,7 @@ export async function GET() {
         schoolDetails: "Greenwood High School",
         eventDate: new Date("2026-10-24T00:00:00.000Z"),
         pocName: "Jane Doe",
+        pocEmail: "jane@example.com",
         pocPhone: "555-0100",
         status: "ACTIVE",
         createdBy: adminUser.id,

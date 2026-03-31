@@ -92,10 +92,10 @@ export default async function AdminEventDetails({
                   {dynamicStatus}
                 </Badge>
                 {dynamicStatus === "UPCOMING" && (
-                  <EventManagementActions 
-                    eventId={event.id} 
-                    currentDate={event.eventDate} 
-                    status={event.status} 
+                  <EventManagementActions
+                    eventId={event.id}
+                    currentDate={event.eventDate}
+                    status={event.status}
                   />
                 )}
               </div>

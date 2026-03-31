@@ -23,7 +23,21 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "UPCOMING" | "ACTIVE (TODAY)" | "PAST">("ALL");
 
-  // Filter logic
+  const getDynamicStatus = (date: Date) => {
+    const evDate = new Date(date);
+    evDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (evDate.getTime() === today.getTime()) {
+      return "ACTIVE (TODAY)";
+    } else if (evDate < today) {
+      return "PAST";
+    }
+    return "UPCOMING";
+  };
+
+  // Filter and Sort logic
   const filteredEvents = events.filter(event => {
     const evDate = new Date(event.eventDate);
     evDate.setHours(0, 0, 0, 0);
@@ -45,21 +59,23 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
     if (srch && !event.schoolDetails.toLowerCase().includes(srch)) return false;
 
     return true;
-  });
+  }).sort((a, b) => {
+    const statusA = getDynamicStatus(a.eventDate);
+    const statusB = getDynamicStatus(b.eventDate);
 
-  const getDynamicStatus = (date: Date) => {
-    const evDate = new Date(date);
-    evDate.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const priority = { "ACTIVE (TODAY)": 0, "UPCOMING": 1, "PAST": 2 };
 
-    if (evDate.getTime() === today.getTime()) {
-      return "ACTIVE (TODAY)";
-    } else if (evDate < today) {
-      return "PAST";
+    // First by status priority
+    if (priority[statusA as keyof typeof priority] !== priority[statusB as keyof typeof priority]) {
+      return priority[statusA as keyof typeof priority] - priority[statusB as keyof typeof priority];
     }
-    return "UPCOMING";
-  };
+
+    // Then by date within the same status
+    if (statusA === "PAST") {
+      return new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime(); // Newest past first
+    }
+    return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime(); // Closest upcoming first
+  });
 
   return (
     <div className="space-y-6">
@@ -105,18 +121,18 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
           <p className="text-slate-600 max-w-sm mx-auto">We couldn&apos;t find any events matching your current filters. Try adjusting your search or clearing the status filter.</p>
         </Card>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {filteredEvents.map(event => {
             const dynamicStatus = getDynamicStatus(event.eventDate);
 
             return (
               <Link href={`/admin/events/${event.id}`} key={event.id} className="group">
-                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden relative">
+                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-2 border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden relative">
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${dynamicStatus.includes("ACTIVE") ? 'bg-emerald-500' : dynamicStatus === "PAST" ? 'bg-slate-300' : 'bg-emerald-500'}`} />
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 flex-1 pl-3 w-full">
                     <div className="min-w-[140px]">
-                      <Badge className={`px-2.5 py-1 text-xs font-semibold rounded-full mb-1 border ${dynamicStatus.includes("ACTIVE")
+                      <Badge className={`px-2 py-0 text-[10px] font-semibold rounded-full border ${dynamicStatus.includes("ACTIVE")
                         ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200'
                         : dynamicStatus === "PAST"
                           ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
@@ -124,17 +140,16 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
                         }`}>
                         {dynamicStatus}
                       </Badge>
-                      <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1.5">
-                        <CalendarPlus className="h-3.5 w-3.5 text-slate-400" />
+                      <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5">
                         {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors truncate">
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors truncate">
                         {event.schoolDetails}
                       </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 font-bold uppercase tracking-tighter text-sm">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-0.5 font-medium uppercase tracking-tighter text-[11px]">
                         <div className="flex items-center gap-1 text-slate-500">
                           <span className="text-emerald-600">POC:</span>
                           <span className="text-slate-700 truncate max-w-[120px]">{event.pocName}</span>
@@ -144,6 +159,16 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
                           <span className="text-slate-700 truncate max-w-[120px]">{event.eventHeadName}</span>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {dynamicStatus === "UPCOMING" && (
+                        <EventManagementActions
+                          eventId={event.id}
+                          currentDate={event.eventDate}
+                          status={event.status}
+                        />
+                      )}
                     </div>
 
                     <div className="flex items-center gap-6 mt-3 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none">
@@ -165,18 +190,9 @@ export function EventsTabClient({ events }: { events: EventType[] }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    {dynamicStatus === "UPCOMING" && (
-                      <EventManagementActions
-                        eventId={event.id}
-                        currentDate={event.eventDate}
-                        status={event.status}
-                      />
-                    )}
-                    <div className="hidden sm:flex items-center justify-center p-2">
-                      <div className="bg-slate-50 p-2 rounded-full group-hover:bg-emerald-50 group-hover:text-emerald-600 text-slate-300 transition-colors">
-                        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </div>
+                  <div className="hidden sm:flex items-center justify-center p-2">
+                    <div className="bg-slate-50 p-2 rounded-full group-hover:bg-emerald-50 group-hover:text-emerald-600 text-slate-300 transition-colors">
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Card>

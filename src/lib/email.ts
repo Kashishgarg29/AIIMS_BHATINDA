@@ -108,3 +108,35 @@ export const sendRequestRejectedEmail = async (to: string, pocName: string, scho
         return false;
     }
 };
+
+export const sendEventCanceledEmail = async (to: string, pocName: string, schoolName: string, date: Date) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject: 'Health Camp Event Cancelled - HealthCampPro',
+        html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2>Hello ${pocName},</h2>
+        <p>We regret to inform you that your scheduled health camp for <strong>${schoolName}</strong> on <strong>${new Date(date).toLocaleDateString()}</strong> has been <strong>CANCELLED</strong>.</p>
+        <p>If you have any questions or would like to reschedule, please contact our administrative team.</p>
+        <p>We apologize for any inconvenience this may cause.</p>
+        <p>Best regards,<br/>The HealthCampPro Team</p>
+      </div>
+    `,
+    };
+
+    try {
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+            console.log("------------------------");
+            console.log("[MOCK EMAIL: EVENT CANCELLED] To:", to);
+            console.log("Subject:", mailOptions.subject);
+            console.log("------------------------");
+            return true;
+        }
+        await transporter.sendMail(mailOptions);
+        return true;
+    } catch (error) {
+        console.error("Error sending email: ", error);
+        return false;
+    }
+};

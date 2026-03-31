@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { revalidatePath } from "next/cache";
-import { sendRequestAcceptedEmail, sendRequestRejectedEmail } from "@/lib/email";
+import { sendRequestAcceptedEmail, sendRequestRejectedEmail, sendEventCanceledEmail } from "@/lib/email";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import bcryptjs from "bcryptjs";
@@ -159,7 +159,7 @@ export async function acceptCampRequest(
 }
 
 // Manually Create Event
- export async function createEvent(
+export async function createEvent(
   data: {
     schoolDetails: string,
     eventDate: Date,
@@ -437,13 +437,22 @@ export async function cancelEvent(eventId: string) {
 
     if (!event) return { success: false, error: "Event not found" };
     if (event.status !== "UPCOMING") {
-      return { success: false, error: "Only upcoming events can be canceled" };
+      return { success: false, error: "Only upcoming events can be cancelled" };
     }
 
     await prisma.event.update({
       where: { id: eventId },
-      data: { status: "CANCELED" as any }
+      data: { status: "CANCELLED" as any }
     });
+
+    // Send Event Cancelled Email
+    try {
+      if (event.pocEmail && event.pocName && event.schoolDetails) {
+        await sendEventCanceledEmail(event.pocEmail, event.pocName, event.schoolDetails, event.eventDate);
+      }
+    } catch (e) {
+      console.error("Non-fatal: Email dispatch failed after event cancellation.", e);
+    }
 
     revalidatePath(`/admin/events/${eventId}`);
     revalidatePath("/admin/dashboard");

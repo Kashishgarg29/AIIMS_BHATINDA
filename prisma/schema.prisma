@@ -30,7 +30,7 @@ enum EventStatus {
   ACTIVE
   COMPLETED
   LOCKED
-  CANCELED
+  CANCELLED
 }
 
 enum Gender {

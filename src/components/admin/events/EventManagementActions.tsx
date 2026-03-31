@@ -9,14 +9,14 @@ import { CalendarDays, XCircle, Loader2 } from "lucide-react";
 import { cancelEvent, rescheduleEvent } from "@/lib/actions/admin-actions";
 import { useRouter } from "next/navigation";
 
-export function EventManagementActions({ 
-  eventId, 
-  currentDate, 
+export function EventManagementActions({
+  eventId,
+  currentDate,
   status,
   className = ""
-}: { 
-  eventId: string; 
-  currentDate: Date; 
+}: {
+  eventId: string;
+  currentDate: Date;
   status: string;
   className?: string;
 }) {
@@ -24,12 +24,12 @@ export function EventManagementActions({
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [newDate, setNewDate] = useState(new Date(currentDate).toISOString().split('T')[0]);
 
   // Helper to check if event is UPCOMING
   const isUpcoming = status === "UPCOMING";
-  
+
   if (!isUpcoming) return null;
 
   async function handleCancel() {
@@ -58,13 +58,13 @@ export function EventManagementActions({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={(e) => { 
-          e.preventDefault(); 
-          e.stopPropagation(); 
-          setIsRescheduleOpen(true); 
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsRescheduleOpen(true);
         }}
         className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 h-8 font-semibold"
       >
@@ -72,13 +72,13 @@ export function EventManagementActions({
         Reschedule
       </Button>
 
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={(e) => { 
-          e.preventDefault(); 
-          e.stopPropagation(); 
-          setIsCancelOpen(true); 
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsCancelOpen(true);
         }}
         className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 h-8 font-semibold"
       >
@@ -98,18 +98,18 @@ export function EventManagementActions({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="newDate">New Scheduled Date</Label>
-              <Input 
-                id="newDate" 
-                type="date" 
-                value={newDate} 
-                onChange={(e) => setNewDate(e.target.value)} 
+              <Input
+                id="newDate"
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRescheduleOpen(false)}>Cancel</Button>
-            <Button 
-              className="bg-emerald-600 hover:bg-emerald-700" 
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
               onClick={handleReschedule}
               disabled={isLoading}
             >
@@ -126,13 +126,13 @@ export function EventManagementActions({
           <DialogHeader>
             <DialogTitle className="text-red-600 font-bold">Cancel Health Camp?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to cancel this event? This action cannot be undone and the status will be marked as CANCELED.
+              Are you sure you want to cancel this event? This action cannot be undone and the status will be marked as CANCELLED.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0 pt-4">
             <Button variant="outline" onClick={() => setIsCancelOpen(false)}>No, Keep Event</Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleCancel}
               disabled={isLoading}
             >

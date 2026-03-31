@@ -19,7 +19,8 @@ export default function Home() {
         <div className="max-w-3xl">
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-white mb-8 leading-[1.1]">
             AIIMS Bathinda<br />
-            <span className="text-white">health camp platform</span>
+
+            <span className="text-white">Health Camp Platform</span>
           </h1>
 
           <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-2xl leading-relaxed font-light">

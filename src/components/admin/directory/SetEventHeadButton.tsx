@@ -53,7 +53,11 @@ export function SetEventHeadButton({
         <div className="py-4 flex justify-center">
           <Select value={selectedUserId} onValueChange={(val) => setSelectedUserId(val as string)}>
             <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Select a doctor" />
+              <div className="flex-1 text-left truncate">
+                {selectedUserId 
+                  ? assignedStaff.find(s => s.id === selectedUserId)?.fullName 
+                  : "Select a doctor"}
+              </div>
             </SelectTrigger>
             <SelectContent>
               {assignedStaff.map(staff => (

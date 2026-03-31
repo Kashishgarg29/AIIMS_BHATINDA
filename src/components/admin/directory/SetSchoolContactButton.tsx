@@ -49,7 +49,11 @@ export function SetSchoolContactButton({
           <Label className="block mb-2 text-sm font-medium">Select Staff Member</Label>
           <Select value={selectedUserId} onValueChange={(val) => setSelectedUserId(val || "")}>
             <SelectTrigger>
-              <SelectValue placeholder="Identify School Representative" />
+              <div className="flex-1 text-left truncate">
+                {selectedUserId 
+                  ? assignedStaff.find(s => s.id === selectedUserId)?.fullName 
+                  : "Identify School Representative"}
+              </div>
             </SelectTrigger>
             <SelectContent>
               {assignedStaff.map((user) => (

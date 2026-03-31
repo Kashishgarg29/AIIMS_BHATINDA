@@ -19,26 +19,49 @@ type AssignedEventType = {
   referredStudents: { id: string; name: string; classSec: string; depts: string[] }[];
   pocName: string;
   eventHeadName: string;
+  isHead: boolean;
 };
 
 export function StaffEventsClient({ events }: { events: AssignedEventType[] }) {
+  const [showHeadOnly, setShowHeadOnly] = useState(false);
+
+  const displayedEvents = showHeadOnly ? events.filter(e => e.isHead) : events;
 
   return (
     <div className="space-y-6">
       <RealTimeRefresher />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Assigned Events</h2>
+        
+        <div className="flex bg-slate-100 p-1 rounded-lg overflow-x-auto w-full sm:w-auto mt-2 sm:mt-0">
+          <button
+            onClick={() => setShowHeadOnly(false)}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all flex-1 sm:flex-none ${!showHeadOnly ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+          >
+            All Events
+          </button>
+          <button
+            onClick={() => setShowHeadOnly(true)}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all flex-1 sm:flex-none ${showHeadOnly ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+          >
+            Assigned as Head
+          </button>
+        </div>
       </div>
 
-      {events.length === 0 ? (
+      {displayedEvents.length === 0 ? (
         <div className="col-span-full text-center py-16 bg-white rounded-xl border border-dashed text-slate-500 bg-slate-50/50">
           <CalendarDays className="h-16 w-16 mx-auto mb-6 text-slate-300" />
-          <h3 className="text-xl font-bold text-slate-900 mb-2">No Events Assigned</h3>
-          <p className="text-slate-600 max-w-sm mx-auto">You currently have no health camp events assigned to you.</p>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">No Events Found</h3>
+          <p className="text-slate-600 max-w-sm mx-auto">
+            {showHeadOnly 
+              ? "You are not assigned as the head for any events." 
+              : "You currently have no health camp events assigned to you."}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {events.map(event => (
+          {displayedEvents.map(event => (
             <Link href={`/staff/workspace/${event.id}`} key={event.id} className="group">
               <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden relative">
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${event.status === "ACTIVE" ? 'bg-emerald-500' : event.status === "PAST" ? 'bg-slate-400' : 'bg-emerald-500'}`} />

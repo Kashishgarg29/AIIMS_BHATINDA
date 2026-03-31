@@ -85,6 +85,7 @@ export default async function StaffDashboard() {
 
     const eventHeadId = (event.formConfig as any)?.eventHeadId;
     const eventHead = (event.eventStaff as any[]).find(s => s.user.id === eventHeadId)?.user?.fullName || "Not Assigned";
+    const isHead = eventHeadId === session.user.id;
 
     return {
       id: event.id,
@@ -97,6 +98,7 @@ export default async function StaffDashboard() {
       referredStudents,
       pocName: event.pocName,
       eventHeadName: eventHead,
+      isHead,
     };
   });
   

@@ -20,8 +20,15 @@ const CATEGORY_DEFINITIONS = [
   { id: "skin", title: "Dermatology", iconName: "Hand" },
 ];
 
-export default async function StudentRecordMasterView({ params }: { params: Promise<{ eventId: string, studentId: string }> }) {
-  const { eventId, studentId } = await params;
+export default async function StudentRecordMasterView(props: {
+  params: Promise<{ eventId: string, studentId: string }>,
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const { eventId, studentId } = await props.params;
+  const searchParams = props.searchParams ? await props.searchParams : {};
+  const backTo = searchParams.from === "referred"
+    ? `/staff/workspace/${eventId}/referred`
+    : `/staff/workspace/${eventId}`;
   const session = await getServerSession(authOptions);
 
   // Fetch full student and medical record from DB
@@ -152,7 +159,7 @@ export default async function StudentRecordMasterView({ params }: { params: Prom
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <Link href={`/staff/workspace/${eventId}`}>
+                <Link href={backTo}>
                   <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-emerald-600 transition-all shadow-sm">
                     <ArrowLeft className="h-4 w-4" />
                   </Button>

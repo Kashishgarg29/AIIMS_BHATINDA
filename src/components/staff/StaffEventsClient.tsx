@@ -32,7 +32,7 @@ export function StaffEventsClient({ events }: { events: AssignedEventType[] }) {
       <RealTimeRefresher />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Assigned Events</h2>
-        
+
         <div className="flex bg-slate-100 p-1 rounded-lg overflow-x-auto w-full sm:w-auto mt-2 sm:mt-0">
           <button
             onClick={() => setShowHeadOnly(false)}
@@ -54,8 +54,8 @@ export function StaffEventsClient({ events }: { events: AssignedEventType[] }) {
           <CalendarDays className="h-16 w-16 mx-auto mb-6 text-slate-300" />
           <h3 className="text-xl font-bold text-slate-900 mb-2">No Events Found</h3>
           <p className="text-slate-600 max-w-sm mx-auto">
-            {showHeadOnly 
-              ? "You are not assigned as the head for any events." 
+            {showHeadOnly
+              ? "You are not assigned as the head for any events."
               : "You currently have no health camp events assigned to you."}
           </p>
         </div>
@@ -100,35 +100,12 @@ export function StaffEventsClient({ events }: { events: AssignedEventType[] }) {
                   <div className="flex items-center gap-6 mt-3 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none pr-4">
                     {event.referredCount > 0 && (
                       <div onClick={e => e.stopPropagation()}>
-                        <Dialog>
-                          <DialogTrigger onClick={e => e.preventDefault()} className="cursor-pointer text-[10px] sm:text-xs font-bold text-red-700 bg-red-50 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full border border-red-200 hover:bg-red-100 transition-colors animate-pulse">
-                            {event.referredCount} Referred
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col pt-6 pb-2 px-1 rounded-xl">
-                            <DialogHeader className="px-5">
-                              <DialogTitle className="text-xl font-bold text-red-700">Referred Students — {event.schoolName}</DialogTitle>
-                              <DialogDescription>Students with at least one Referred (R) department assessment.</DialogDescription>
-                            </DialogHeader>
-                            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2 mt-2">
-                              {event.referredStudents.map(stud => (
-                                <Link href={`/staff/workspace/${event.id}/student/${stud.id}`} key={stud.id} className="block">
-                                  <div className="bg-red-50 p-3 rounded-xl border border-red-100 hover:bg-red-100 flex justify-between items-center group shadow-sm">
-                                    <div>
-                                      <p className="font-bold text-slate-900">{stud.name}</p>
-                                      <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-1">{stud.classSec}</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {stud.depts.map((d: string) => (
-                                          <span key={d} className="text-[9px] font-bold bg-red-200 text-red-800 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{d}</span>
-                                        ))}
-                                      </div>
-                                    </div>
-                                    <ArrowRight className="h-4 w-4 text-red-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all" />
-                                  </div>
-                                </Link>
-                              ))}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Link
+                          href={`/staff/workspace/${event.id}/referred`}
+                          className="inline-flex items-center cursor-pointer text-[10px] sm:text-xs font-bold text-red-700 bg-red-50 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full border border-red-200 hover:bg-red-100 transition-colors"
+                        >
+                          {event.referredCount} Referred
+                        </Link>
                       </div>
                     )}
 

@@ -30,7 +30,7 @@ export function CreateEventModal({
 
     const formData = new FormData(e.currentTarget);
     const dateStr = formData.get("date") as string;
-    
+
     const payload = {
       schoolDetails: formData.get("schoolDetails") as string,
       eventDate: new Date(dateStr),
@@ -41,7 +41,7 @@ export function CreateEventModal({
     };
 
     const res = await createEvent(payload as any);
-    
+
     if (res.success) {
       onClose();
     } else {
@@ -72,12 +72,12 @@ export function CreateEventModal({
 
           <div className="space-y-1">
             <label className="text-sm font-medium text-slate-700">Event Date</label>
-            <input 
-              required 
-              name="date" 
-              type="date" 
-              className="w-full p-2 border rounded-md" 
-              min={new Date().toISOString().split('T')[0]} 
+            <input
+              required
+              name="date"
+              type="date"
+              className="w-full p-2 border rounded-md"
+              min={new Date().toISOString().split('T')[0]}
             />
           </div>
 

@@ -43,19 +43,19 @@ export function EventDetailManagement({
     <Tabs defaultValue="roster" orientation="vertical" className="flex-1 flex flex-col md:flex-row overflow-hidden text-slate-900 font-sans">
       {/* Sidebar - IDentical to Dashboard */}
       <aside className="w-full md:w-64 bg-white border-r flex-shrink-0">
-        <div className="py-4 h-full flex flex-col">
-          <div className="px-6 mb-2">
-            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Management</h2>
+        <div className="py-4 md:py-6 h-full flex flex-col pr-4 md:pr-0">
+          <div className="px-6 mb-4 hidden md:block">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Management</h2>
           </div>
-          <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 justify-start items-stretch shrink-0 space-y-0.5">
-            <TabsTrigger value="staff" className="w-full justify-start px-6 py-2 text-xs font-semibold uppercase tracking-tight data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-900 rounded-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-50 border-0">
-              <span className="truncate">Assign Staff</span>
+          <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 justify-start items-stretch shrink-0 space-y-1">
+            <TabsTrigger value="staff" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+              <Users className="h-5 w-5 shrink-0" /> <span className="truncate">Assign Staff</span>
             </TabsTrigger>
-            <TabsTrigger value="roster" className="w-full justify-start px-6 py-2 text-xs font-semibold uppercase tracking-tight data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-900 rounded-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-50 border-0">
-              <span className="truncate">Student Roster</span>
+            <TabsTrigger value="roster" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+              <FileText className="h-5 w-5 shrink-0" /> <span className="truncate">Student Roster</span>
             </TabsTrigger>
-            <TabsTrigger value="config" className="w-full justify-start px-6 py-2 text-xs font-semibold uppercase tracking-tight data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-900 rounded-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-50 border-0">
-              <span className="truncate">Form Setting</span>
+            <TabsTrigger value="config" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+              <Settings className="h-5 w-5 shrink-0" /> <span className="truncate">Form Setting</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -126,7 +126,6 @@ export function EventDetailManagement({
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h2 className="text-xl font-bold text-slate-900 tracking-tight">Staff Assignment</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Medical crew for current camp</p>
                   </div>
                   <div className="flex gap-2">
                     <AssignStaffButton
@@ -228,8 +227,6 @@ export function EventDetailManagement({
             <TabsContent value="config" className="mt-0 outline-none">
               <div className="space-y-4">
                 <div className="mb-4">
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Form Configuration</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Define health screening modules</p>
                 </div>
                 <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                   <EventFormConfigBuilder

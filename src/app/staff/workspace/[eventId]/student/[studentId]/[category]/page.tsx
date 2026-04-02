@@ -67,10 +67,12 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
     readOnlyReason = "You are not assigned to this medical section. You can view the data but cannot make edits.";
   }
 
-  const isReadOnly = dynamicStatus === "PAST" || isSectionLockedForUser;
+  const isReadOnly = dynamicStatus === "PAST" || isSectionLockedForUser || (dynamicStatus === "UPCOMING" && !isAdmin);
 
   if (dynamicStatus === "PAST") {
     readOnlyReason = "This event has already passed. The medical record is frozen and cannot be edited.";
+  } else if (dynamicStatus === "UPCOMING" && !isAdmin) {
+    readOnlyReason = "This event has not started yet. Forms will be available for editing when the event becomes active.";
   }
 
   return (

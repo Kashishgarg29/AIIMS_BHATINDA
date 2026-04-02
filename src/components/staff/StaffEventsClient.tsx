@@ -17,6 +17,8 @@ type AssignedEventType = {
   studentCount: number;
   referredCount: number;
   referredStudents: { id: string; name: string; classSec: string; depts: string[] }[];
+  observationCount: number;
+  observationStudents: { id: string; name: string; classSec: string; depts: string[] }[];
   pocName: string;
   eventHeadName: string;
   isHead: boolean;
@@ -113,6 +115,17 @@ export function StaffEventsClient({
                           className="inline-flex items-center cursor-pointer text-[10px] sm:text-xs font-bold text-red-700 bg-red-50 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full border border-red-200 hover:bg-red-100 transition-colors"
                         >
                           {event.referredCount} Referred
+                        </Link>
+                      </div>
+                    )}
+
+                    {event.observationCount > 0 && (
+                      <div onClick={e => e.stopPropagation()}>
+                        <Link
+                          href={`/staff/workspace/${event.id}/observation`}
+                          className="inline-flex items-center cursor-pointer text-[10px] sm:text-xs font-bold text-amber-700 bg-amber-50 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors"
+                        >
+                          {event.observationCount} Observe
                         </Link>
                       </div>
                     )}

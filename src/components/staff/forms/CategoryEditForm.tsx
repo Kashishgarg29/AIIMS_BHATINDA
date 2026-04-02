@@ -498,7 +498,7 @@ export function CategoryEditFormClient({
     <div className="flex flex-col pb-24">
 
       {/* Category Editor Header */}
-      <div className="bg-white border-b shrink-0 z-20 shadow-sm relative">
+      <div className="bg-white border-b shrink-0 z-20 shadow-sm sticky top-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 w-full">
           <div className="flex items-start sm:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-4">

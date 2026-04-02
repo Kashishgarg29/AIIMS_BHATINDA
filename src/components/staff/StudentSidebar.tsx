@@ -30,16 +30,17 @@ export function StudentSidebar({ students, eventId }: StudentSidebarProps) {
   const [search, setSearch] = useState("");
 
   const isReferredView = pathname.includes("/referred") || searchParams.get("from") === "referred";
+  const isObservationView = pathname.includes("/observation") || searchParams.get("from") === "observation";
 
-  const getReferredStudents = () => {
+  const getFilteredStudents = (flag: "R" | "O") => {
     return students.filter((stud) => {
       const data = stud.medicalRecord?.data as Record<string, any> | null;
       if (!data) return false;
-      return Object.values(data).some((catData: any) => catData?.status_nor === "R");
+      return Object.values(data).some((catData: any) => catData?.status_nor === flag);
     });
   };
 
-  const baseList = isReferredView ? getReferredStudents() : students;
+  const baseList = isReferredView ? getFilteredStudents("R") : (isObservationView ? getFilteredStudents("O") : students);
 
   const filteredStudents = baseList.filter((s) => {
     const q = search.toLowerCase();
@@ -55,11 +56,11 @@ export function StudentSidebar({ students, eventId }: StudentSidebarProps) {
       <div className="p-4 border-b space-y-4 shadow-sm bg-white/50 backdrop-blur-sm z-10">
         <div className="flex items-center justify-between">
           <h2 className="font-extrabold text-lg text-slate-900 tracking-tight">
-            {isReferredView ? "Review List" : "Student Roster"}
+            {isReferredView ? "Review List" : isObservationView ? "Observation List" : "Student Roster"}
           </h2>
           <Badge variant="secondary" className={cn(
             "border-none font-bold",
-            isReferredView ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-600"
+            isReferredView ? "bg-red-100 text-red-600" : isObservationView ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-600"
           )}>
             {baseList.length}
           </Badge>
@@ -69,7 +70,7 @@ export function StudentSidebar({ students, eventId }: StudentSidebarProps) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={isReferredView ? "Search referred..." : "Search name or class..."}
+            placeholder={isReferredView ? "Search referred..." : isObservationView ? "Search observation..." : "Search name or class..."}
             className="pl-10 h-10 bg-slate-50 border-slate-200 focus:bg-white focus:ring-emerald-500/20 transition-all text-sm font-medium"
           />
         </div>
@@ -82,30 +83,34 @@ export function StudentSidebar({ students, eventId }: StudentSidebarProps) {
               const isActive = student.id === currentStudentId;
               const status = student.medicalRecord?.status || "PENDING";
               const isReferred = Object.values(student.medicalRecord?.data || {}).some((catData: any) => catData?.status_nor === "R");
+              const isObservation = Object.values(student.medicalRecord?.data || {}).some((catData: any) => catData?.status_nor === "O");
 
               return (
                 <Link
                   key={student.id}
-                  href={`/staff/workspace/${eventId}/student/${student.id}${isReferredView ? '?from=referred' : ''}`}
+                  href={`/staff/workspace/${eventId}/student/${student.id}${isReferredView ? '?from=referred' : isObservationView ? '?from=observation' : ''}`}
                   className={cn(
                     "flex flex-col px-4 py-3.5 transition-all relative group",
                     isActive 
-                      ? isReferredView ? "bg-red-50/80 border-r-4 border-red-500 cursor-default" : "bg-emerald-50/80 border-r-4 border-emerald-500 cursor-default" 
-                      : isReferred && !isReferredView ? "bg-red-50/30 hover:bg-slate-50 cursor-pointer" : "hover:bg-slate-50 bg-transparent cursor-pointer"
+                      ? isReferredView ? "bg-red-50/80 border-r-4 border-red-500 cursor-default" : isObservationView ? "bg-amber-50/80 border-r-4 border-amber-500 cursor-default" : "bg-emerald-50/80 border-r-4 border-emerald-500 cursor-default" 
+                      : (isReferred && !isReferredView && !isObservationView) || (isObservation && !isObservationView && !isReferredView) ? "bg-slate-50/10 hover:bg-slate-50 cursor-pointer" : "hover:bg-slate-50 bg-transparent cursor-pointer"
                   )}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className={cn(
                       "font-bold text-sm truncate pr-2 tracking-tight",
                       isActive 
-                        ? isReferredView ? "text-red-700" : "text-emerald-700"
+                        ? isReferredView ? "text-red-700" : isObservationView ? "text-amber-700" : "text-emerald-700"
                         : "text-slate-900 group-hover:text-emerald-600"
                     )}>
                       {student.firstName} {student.lastName}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {isReferred && !isReferredView && (
+                      {isReferred && !isReferredView && !isObservationView && (
                         <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" title="Referred" />
+                      )}
+                      {isObservation && !isObservationView && !isReferredView && (
+                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" title="Observation" />
                       )}
                       <Badge 
                         variant="outline" 
@@ -124,7 +129,7 @@ export function StudentSidebar({ students, eventId }: StudentSidebarProps) {
                     <span className={cn(
                       "px-1.5 py-0.5 rounded transition-colors uppercase tracking-tight",
                       isActive 
-                        ? isReferredView ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+                        ? isReferredView ? "bg-red-100 text-red-700" : isObservationView ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
                         : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600"
                     )}>
                       Class {student.classSec}

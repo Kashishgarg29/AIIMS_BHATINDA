@@ -80,6 +80,23 @@ export default async function StaffDashboard() {
       };
     });
 
+    const observationStudents = (event.students as any[]).filter(stud => {
+      const data = stud.medicalRecord?.data as Record<string, any> | null;
+      if (!data) return false;
+      return Object.values(data).some((catData: any) => catData?.status_nor === 'O');
+    }).map((stud: any) => {
+      const data = stud.medicalRecord?.data as Record<string, any>;
+      const depts = Object.entries(data || {})
+        .filter(([, catData]: any) => catData?.status_nor === 'O')
+        .map(([key]) => DEPT_MAP[key] || key);
+      return {
+        id: stud.id,
+        name: `${stud.firstName} ${stud.lastName}`,
+        classSec: stud.classSec,
+        depts,
+      };
+    });
+
     const eventHeadId = (event.formConfig as any)?.eventHeadId;
     const eventHead = (event.eventStaff as any[]).find(s => s.user.id === eventHeadId)?.user?.fullName || "Not Assigned";
     const isHead = eventHeadId === session.user.id;
@@ -93,6 +110,8 @@ export default async function StaffDashboard() {
       studentCount: event._count.students,
       referredCount: referredStudents.length,
       referredStudents,
+      observationCount: observationStudents.length,
+      observationStudents,
       pocName: event.pocName,
       eventHeadName: eventHead,
       isHead,

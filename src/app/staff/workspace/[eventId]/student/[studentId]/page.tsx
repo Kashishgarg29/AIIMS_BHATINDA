@@ -26,7 +26,9 @@ export default async function StudentRecordMasterView(props: {
   const searchParams = props.searchParams ? await props.searchParams : {};
   const backTo = searchParams.from === "referred"
     ? `/staff/workspace/${eventId}/referred`
-    : `/staff/workspace/${eventId}`;
+    : searchParams.from === "observation"
+      ? `/staff/workspace/${eventId}/observation`
+      : `/staff/workspace/${eventId}`;
   const session = await getServerSession(authOptions);
 
   // Fetch full student and medical record from DB
@@ -205,6 +207,7 @@ export default async function StudentRecordMasterView(props: {
           assignedCategoryIds={assignedCategoryIds}
           eventId={eventId}
           studentId={studentId}
+          isUpcoming={dynamicStatus === "UPCOMING" && !isAdmin}
         />
       </main>
     </div>

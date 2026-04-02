@@ -49,11 +49,13 @@ export function StudentCategoryGrid({
   assignedCategoryIds,
   eventId,
   studentId,
+  isUpcoming = false,
 }: {
   categoriesStatus: CategoryStatus[];
   assignedCategoryIds: string[];
   eventId: string;
   studentId: string;
+  isUpcoming?: boolean;
 }) {
   // Removed extra state
 
@@ -83,10 +85,19 @@ export function StudentCategoryGrid({
     .sort((a, b) => getSeverity(a) - getSeverity(b));
 
   const renderCategoryCard = (cat: CategoryStatus, isAssigned: boolean) => {
+    const CardContentWrapper = ({ children }: { children: React.ReactNode }) => {
+      if (isUpcoming) {
+        return <div className="block opacity-75">{children}</div>;
+      }
+      return <Link href={`/staff/workspace/${eventId}/student/${studentId}/${cat.id}`} className="block transition-opacity">{children}</Link>;
+    };
+
     return (
-      <Link href={`/staff/workspace/${eventId}/student/${studentId}/${cat.id}`} key={cat.id} className="block transition-opacity">
-        <div className={`flex flex-col sm:flex-row gap-4 p-4 rounded-xl border transition-colors cursor-pointer group shadow-sm ${cat.status === 'COMPLETED' ? 'bg-green-50 border-green-300' :
-            cat.status === 'IN_PROGRESS' ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200 hover:border-emerald-400'
+      <CardContentWrapper key={cat.id}>
+        <div className={`flex flex-col sm:flex-row gap-4 p-4 rounded-xl border transition-colors shadow-sm ${
+            isUpcoming ? 'bg-slate-50 border-slate-200 grayscale-[0.5] cursor-not-allowed' :
+            cat.status === 'COMPLETED' ? 'bg-green-50 border-green-300' :
+            cat.status === 'IN_PROGRESS' ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200 hover:border-emerald-400 cursor-pointer group'
           }`}>
           {/* Left side: Title */}
           <div className="flex flex-col justify-center sm:w-1/5 shrink-0">
@@ -140,15 +151,16 @@ export function StudentCategoryGrid({
               ) : null}
             </div>
             <div className="font-bold text-xs text-slate-500 group-hover:text-emerald-600 flex items-center gap-1 transition-colors">
-              {cat.isReadOnly ? 'View' :
-                cat.isLockedBy ? 'Locked' :
-                  cat.status === 'COMPLETED' ? 'Edit' :
-                    cat.status === 'IN_PROGRESS' ? 'Resume' : 'Start'}
-              <span className="text-emerald-500 transition-transform group-hover:translate-x-1">&rarr;</span>
+              {isUpcoming ? 'Not Started' :
+                cat.isReadOnly ? 'View' :
+                  cat.isLockedBy ? 'Locked' :
+                    cat.status === 'COMPLETED' ? 'Edit' :
+                      cat.status === 'IN_PROGRESS' ? 'Resume' : 'Start'}
+              {!isUpcoming && <span className="text-emerald-500 transition-transform group-hover:translate-x-1">&rarr;</span>}
             </div>
           </div>
         </div>
-      </Link>
+      </CardContentWrapper>
     );
   };
 

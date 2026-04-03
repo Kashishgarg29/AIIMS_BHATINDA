@@ -141,13 +141,13 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
             <table className="w-full text-sm text-left border-collapse">
               <thead className="text-[11px] text-slate-500 bg-slate-50 uppercase font-bold tracking-wider border-b">
                 <tr>
-                  <th className="px-6 py-4 font-bold border-r border-slate-100 last:border-r-0">School / Event</th>
-                  <th className="px-6 py-4 font-bold border-r border-slate-100 last:border-r-0">Date</th>
-                  <th className="px-6 py-4 font-bold text-center border-r border-slate-100 last:border-r-0">Status</th>
-                  <th className="px-6 py-4 font-bold border-r border-slate-100 last:border-r-0">POC & Event Head</th>
-                  <th className="px-4 py-4 font-bold text-center border-r border-slate-100 last:border-r-0">Students</th>
-                  <th className="px-4 py-4 font-bold text-center border-r border-slate-100 last:border-r-0">Staff</th>
-                  <th className="px-6 py-4 font-bold text-center">Actions</th>
+                  <th className="px-6 py-4 font-semibold border-r border-slate-100 last:border-r-0">School / Event</th>
+                  <th className="px-6 py-4 font-semibold border-r border-slate-100 last:border-r-0">Date</th>
+                  <th className="px-6 py-4 font-semibold text-center border-r border-slate-100 last:border-r-0">Status</th>
+                  <th className="px-6 py-4 font-semibold border-r border-slate-100 last:border-r-0">POC & Event Head</th>
+                  <th className="px-4 py-4 font-semibold text-center border-r border-slate-100 last:border-r-0">Students</th>
+                  <th className="px-4 py-4 font-semibold text-center border-r border-slate-100 last:border-r-0">Staff</th>
+                  <th className="px-6 py-4 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -162,13 +162,13 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
                     >
                       <td className="px-6 py-4 min-w-[200px]">
                         <div className="block">
-                          <span className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors block leading-tight">
+                          <span className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors block leading-tight">
                             {event.schoolDetails}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-slate-600">
+                        <span className="text-sm font-medium text-slate-600">
                           {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </td>
@@ -183,20 +183,20 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-emerald-600 font-extrabold uppercase tracking-tighter w-8">POC:</span>
-                            <span className="text-slate-700 font-bold truncate max-w-[120px]">{event.pocName}</span>
+                            <span className="text-emerald-600 font-bold uppercase tracking-tighter w-8">POC:</span>
+                            <span className="text-slate-700 font-medium truncate max-w-[120px]">{event.pocName}</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-amber-600 font-extrabold uppercase tracking-tighter w-8">Head:</span>
-                            <span className="text-slate-700 font-bold truncate max-w-[120px]">{event.eventHeadName}</span>
+                            <span className="text-amber-600 font-bold uppercase tracking-tighter w-8">Head:</span>
+                            <span className="text-slate-700 font-medium truncate max-w-[120px]">{event.eventHeadName}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-sm font-extrabold text-slate-700">{event._count.students}</span>
+                        <span className="text-sm font-semibold text-slate-700">{event._count.students}</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-sm font-extrabold text-slate-700">{event._count.eventStaff}</span>
+                        <span className="text-sm font-semibold text-slate-700">{event._count.eventStaff}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -207,9 +207,6 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
                               status={event.status}
                             />
                           )}
-                          <div className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-emerald-600 transition-colors">
-                            <ArrowRight className="h-4 w-4" />
-                          </div>
                         </div>
                       </td>
                     </tr>
@@ -247,13 +244,13 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
                     >
                       <td className="px-6 py-4 min-w-[200px]">
                         <div className="block">
-                          <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors block leading-tight">
+                          <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-700 transition-colors block leading-tight">
                             {event.schoolDetails}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-slate-500">
+                        <span className="text-sm font-medium text-slate-500">
                           {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </td>
@@ -265,25 +262,25 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1 opacity-70">
                           <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 font-extrabold uppercase tracking-tighter w-8">POC:</span>
-                            <span className="text-slate-600 font-bold truncate max-w-[120px]">{event.pocName}</span>
+                            <span className="text-slate-500 font-bold uppercase tracking-tighter w-8">POC:</span>
+                            <span className="text-slate-600 font-medium truncate max-w-[120px]">{event.pocName}</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 font-extrabold uppercase tracking-tighter w-8">Head:</span>
-                            <span className="text-slate-600 font-bold truncate max-w-[120px]">{event.eventHeadName}</span>
+                            <span className="text-slate-500 font-bold uppercase tracking-tighter w-8">Head:</span>
+                            <span className="text-slate-600 font-medium truncate max-w-[120px]">{event.eventHeadName}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-sm font-bold text-slate-600">{event._count.students}</span>
+                        <span className="text-sm font-medium text-slate-600">{event._count.students}</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-sm font-bold text-slate-600">{event._count.eventStaff}</span>
+                        <span className="text-sm font-medium text-slate-600">{event._count.eventStaff}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="p-1 px-3 text-[10px] font-extrabold text-slate-400 hover:text-emerald-600 border border-slate-100 hover:border-emerald-100 rounded-md transition-all bg-white">
-                            View Details
+                          <div className="p-1 px-3 text-[10px] font-bold text-slate-400 hover:text-emerald-600 border border-slate-100 hover:border-emerald-100 rounded-md transition-all bg-white">
+                            OPEN
                           </div>
                         </div>
                       </td>

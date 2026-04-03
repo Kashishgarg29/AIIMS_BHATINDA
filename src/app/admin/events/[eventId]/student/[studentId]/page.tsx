@@ -87,8 +87,8 @@ export default async function AdminStudentView({
                   <CardHeader className="bg-slate-50 border-b py-3">
                     <CardTitle className="text-base capitalize flex justify-between items-center">
                       {category === "demographics" ? "General Information" :
-                       category === "communityMed" ? "Community Medicine" :
-                       category.replace(/([A-Z])/g, ' $1').replace("-", " ").trim()}
+                        category === "communityMed" ? "Community Medicine" :
+                          category.replace(/([A-Z])/g, ' $1').replace("-", " ").trim()}
                       {catData._lastUpdated && (
                         <span className="text-xs font-normal text-slate-500 flex items-center gap-1">
                           <Clock className="h-3 w-3" /> Updated {new Date(catData._lastUpdated).toLocaleString()}
@@ -107,7 +107,11 @@ export default async function AdminStudentView({
                           <span className="text-sm font-medium text-slate-900">
                             {value === true ? "Yes / Normal" :
                               value === false ? "No / Abnormal" :
-                                String(value) || "-"}
+                                value ? (
+                                  String(value) +
+                                  (key.toLowerCase().includes('height') ? ' cms' :
+                                    key.toLowerCase().includes('weight') ? ' kg' : '')
+                                ) : "-"}
                           </span>
                         </div>
                       ))}

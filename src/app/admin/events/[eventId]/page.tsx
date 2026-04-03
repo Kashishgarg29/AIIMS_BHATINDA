@@ -40,13 +40,35 @@ export default async function AdminEventDetails({
     redirect("/admin/dashboard");
   }
 
-  // Get all Medical Staff for assignment modal
+  // Calculate the same-day range for staff conflict check
+  const eventDayStart = new Date(event.eventDate);
+  eventDayStart.setHours(0, 0, 0, 0);
+  const eventDayEnd = new Date(event.eventDate);
+  eventDayEnd.setHours(23, 59, 59, 999);
+
+  // Identify all staff IDs already assigned to other events on this same day
+  const conflictingAssignments = await prisma.eventStaff.findMany({
+    where: {
+      event: {
+        eventDate: {
+          gte: eventDayStart,
+          lte: eventDayEnd
+        },
+        id: { not: eventId }
+      }
+    },
+    select: { userId: true }
+  });
+  const unavailableStaffIds = conflictingAssignments.map(s => s.userId);
+
+  // Get all Medical Staff for assignment modal, excluding those already on a camp today
   const allMedicalStaff = await prisma.user.findMany({
     where: {
       role: "MEDICAL_STAFF",
-      isActive: true
+      isActive: true,
+      id: { notIn: unavailableStaffIds }
     },
-    select: { id: true, fullName: true, email: true },
+    select: { id: true, fullName: true, email: true, department: true },
     orderBy: { fullName: 'asc' }
   });
 
@@ -79,7 +101,7 @@ export default async function AdminEventDetails({
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden font-sans">
       <Navbar role={session?.user?.role || "ADMIN"} userName={session?.user?.name || "Admin"} />
 
-      <EventDetailManagement 
+      <EventDetailManagement
         event={event}
         allMedicalStaff={allMedicalStaff}
         assignedStaffIds={assignedStaffIds}

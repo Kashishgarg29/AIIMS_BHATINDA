@@ -7,6 +7,7 @@ import { Users, CalendarPlus, ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { EventManagementActions } from "@/components/admin/events/EventManagementActions";
 
 type EventType = {
@@ -23,6 +24,7 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "UPCOMING" | "ACTIVE (TODAY)" | "PAST">("ALL");
   const [showPastEvents, setShowPastEvents] = useState(false);
+  const router = useRouter();
 
   const getDynamicStatus = (date: Date) => {
     const evDate = new Date(date);
@@ -134,162 +136,163 @@ export function EventsTabClient({ events, actionButton }: { events: EventType[],
           <p className="text-slate-600 max-w-sm mx-auto">We couldn&apos;t find any events matching your current filters. Try adjusting your search or clearing the status filter.</p>
         </Card>
       ) : (
-        <div className="flex flex-col gap-2">
-          {activeAndUpcomingEvents.map(event => {
-            const dynamicStatus = getDynamicStatus(event.eventDate);
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead className="text-[11px] text-slate-500 bg-slate-50 uppercase font-bold tracking-wider border-b">
+                <tr>
+                  <th className="px-6 py-4 font-bold border-r border-slate-100 last:border-r-0">School / Event</th>
+                  <th className="px-6 py-4 font-bold border-r border-slate-100 last:border-r-0">Date</th>
+                  <th className="px-6 py-4 font-bold text-center border-r border-slate-100 last:border-r-0">Status</th>
+                  <th className="px-6 py-4 font-bold border-r border-slate-100 last:border-r-0">POC & Event Head</th>
+                  <th className="px-4 py-4 font-bold text-center border-r border-slate-100 last:border-r-0">Students</th>
+                  <th className="px-4 py-4 font-bold text-center border-r border-slate-100 last:border-r-0">Staff</th>
+                  <th className="px-6 py-4 font-bold text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {activeAndUpcomingEvents.map(event => {
+                  const dynamicStatus = getDynamicStatus(event.eventDate);
 
-            return (
-              <Link href={`/admin/events/${event.id}`} key={event.id} className="group">
-                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-2 border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden relative">
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${dynamicStatus.includes("ACTIVE") ? 'bg-emerald-500' : dynamicStatus === "PAST" ? 'bg-slate-300' : 'bg-blue-400'}`} />
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 flex-1 pl-3 w-full">
-                    <div className="min-w-[140px]">
-                      <Badge className={`px-2 py-0 text-[10px] font-semibold rounded-full border ${dynamicStatus.includes("ACTIVE")
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200'
-                        : dynamicStatus === "PAST"
-                          ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                          : 'bg-blue-400 text-white border-blue-500 hover:bg-blue-500'
-                        }`}>
-                        {dynamicStatus}
-                      </Badge>
-                      <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5">
-                        {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </p>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors truncate">
-                        {event.schoolDetails}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-0.5 font-medium uppercase tracking-tighter text-[11px]">
-                        <div className="flex items-baseline gap-1 text-slate-500 text-[10px]">
-                          <span className="text-emerald-600 font-bold uppercase tracking-tight">POC:</span>
-                          <span className="text-slate-700 truncate max-w-[120px] font-medium text-[11px]">{event.pocName}</span>
+                  return (
+                    <tr
+                      key={event.id}
+                      onClick={() => router.push(`/admin/events/${event.id}`)}
+                      className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                    >
+                      <td className="px-6 py-4 min-w-[200px]">
+                        <div className="block">
+                          <span className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors block leading-tight">
+                            {event.schoolDetails}
+                          </span>
                         </div>
-                        <div className="flex items-baseline gap-1 text-slate-500 text-[10px]">
-                          <span className="text-amber-600 font-bold uppercase tracking-tight">Head:</span>
-                          <span className="text-slate-700 truncate max-w-[120px] font-medium text-[11px]">{event.eventHeadName}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      {(dynamicStatus === "UPCOMING" || dynamicStatus.includes("ACTIVE")) && (
-                        <EventManagementActions
-                          eventId={event.id}
-                          currentDate={event.eventDate}
-                          status={event.status}
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-6 mt-3 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Students:</span>
-                          <span className="text-sm font-bold text-slate-700">{event._count.students}</span>
-                        </div>
-                      </div>
-
-                      <div className="w-px h-4 sm:h-6 bg-slate-200 hidden sm:block"></div>
-
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Staff:</span>
-                          <span className="text-sm font-bold text-slate-700">{event._count.eventStaff}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="hidden sm:flex items-center justify-center p-2">
-                    <div className="bg-slate-50 p-2 rounded-full group-hover:bg-emerald-50 group-hover:text-emerald-600 text-slate-300 transition-colors">
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            )
-          })}
-
-          {pastEvents.length > 0 && (
-            <div className="mt-10 w-full">
-              <br />
-              <div className="flex items-center gap-4 w-full mb-6">
-                <div className="flex-1 h-px bg-slate-300" />
-                <button
-                  type="button"
-                  onClick={() => setShowPastEvents(!showPastEvents)}
-                  className="flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 px-6 py-2 rounded-full border border-slate-200 transition-all shadow-sm"
-                >
-                  <span>{showPastEvents ? "▼" : "▶"}</span>
-                  <span>Past Events ({pastEvents.length})</span>
-                </button>
-                <div className="flex-1 h-px bg-slate-300" />
-              </div>
-
-              {showPastEvents && (
-                <div className="mt-6 w-full flex flex-col gap-2">
-                  {pastEvents.map(event => {
-                    const dynamicStatus = getDynamicStatus(event.eventDate);
-
-                    return (
-                      <Link href={`/admin/events/${event.id}`} key={event.id} className="group">
-                        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-2 border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden relative">
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-300" />
-
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 flex-1 pl-3 w-full">
-                            <div className="min-w-[140px]">
-                              <Badge className="px-2 py-0 text-[10px] font-semibold rounded-full border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200">
-                                {dynamicStatus}
-                              </Badge>
-                              <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </p>
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-lg font-bold text-slate-700 truncate">
-                                {event.schoolDetails}
-                              </h3>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-0.5 font-medium uppercase tracking-tighter text-[11px]">
-                                <div className="flex items-baseline gap-1 text-slate-400 text-[10px]">
-                                  <span className="text-slate-500 font-bold uppercase tracking-tight">POC:</span>
-                                  <span className="text-slate-600 truncate max-w-[120px] font-medium text-[11px]">{event.pocName}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-6 mt-3 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none">
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Students:</span>
-                                  <span className="text-sm font-bold text-slate-600">{event._count.students}</span>
-                                </div>
-                              </div>
-                              <div className="w-px h-4 sm:h-6 bg-slate-200 hidden sm:block"></div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">Staff:</span>
-                                  <span className="text-sm font-bold text-slate-600">{event._count.eventStaff}</span>
-                                </div>
-                              </div>
-                            </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-bold text-slate-600">
+                          {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <Badge className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${dynamicStatus.includes("ACTIVE")
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                          : 'bg-blue-400 text-white border-blue-500'
+                          }`}>
+                          {dynamicStatus}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-emerald-600 font-extrabold uppercase tracking-tighter w-8">POC:</span>
+                            <span className="text-slate-700 font-bold truncate max-w-[120px]">{event.pocName}</span>
                           </div>
-                          <div className="hidden sm:flex items-center justify-center p-2">
-                            <div className="bg-slate-50 p-2 rounded-full group-hover:bg-slate-100 group-hover:text-slate-600 text-slate-300 transition-colors">
-                              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                            </div>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-amber-600 font-extrabold uppercase tracking-tighter w-8">Head:</span>
+                            <span className="text-slate-700 font-bold truncate max-w-[120px]">{event.eventHeadName}</span>
                           </div>
-                        </Card>
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className="text-sm font-extrabold text-slate-700">{event._count.students}</span>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className="text-sm font-extrabold text-slate-700">{event._count.eventStaff}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          {(dynamicStatus === "UPCOMING" || dynamicStatus.includes("ACTIVE")) && (
+                            <EventManagementActions
+                              eventId={event.id}
+                              currentDate={event.eventDate}
+                              status={event.status}
+                            />
+                          )}
+                          <div className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-emerald-600 transition-colors">
+                            <ArrowRight className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {/* Past Events Separator Row */}
+                {pastEvents.length > 0 && (
+                  <tr className="bg-slate-50/50">
+                    <td colSpan={7} className="px-6 py-3">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 h-px bg-slate-200" />
+                        <button
+                          type="button"
+                          onClick={() => setShowPastEvents(!showPastEvents)}
+                          className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-white px-4 py-1.5 rounded-full border border-slate-200 transition-all bg-white shadow-xs"
+                        >
+                          <span>{showPastEvents ? "▼" : "▶"}</span>
+                          <span>Past Events ({pastEvents.length})</span>
+                        </button>
+                        <div className="flex-1 h-px bg-slate-200" />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {/* Past Event Rows */}
+                {showPastEvents && pastEvents.map(event => {
+                  const dynamicStatus = getDynamicStatus(event.eventDate);
+
+                  return (
+                    <tr
+                      key={event.id}
+                      onClick={() => router.push(`/admin/events/${event.id}`)}
+                      className="hover:bg-slate-50/50 transition-colors group opacity-85 grayscale-[0.2] cursor-pointer"
+                    >
+                      <td className="px-6 py-4 min-w-[200px]">
+                        <div className="block">
+                          <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors block leading-tight">
+                            {event.schoolDetails}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-bold text-slate-500">
+                          {new Date(event.eventDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <Badge className="px-2 py-0.5 text-[9px] font-bold rounded-full border bg-slate-100 text-slate-600 border-slate-200">
+                          {dynamicStatus}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 opacity-70">
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-slate-500 font-extrabold uppercase tracking-tighter w-8">POC:</span>
+                            <span className="text-slate-600 font-bold truncate max-w-[120px]">{event.pocName}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-slate-500 font-extrabold uppercase tracking-tighter w-8">Head:</span>
+                            <span className="text-slate-600 font-bold truncate max-w-[120px]">{event.eventHeadName}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className="text-sm font-bold text-slate-600">{event._count.students}</span>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className="text-sm font-bold text-slate-600">{event._count.eventStaff}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="p-1 px-3 text-[10px] font-extrabold text-slate-400 hover:text-emerald-600 border border-slate-100 hover:border-emerald-100 rounded-md transition-all bg-white">
+                            View Details
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

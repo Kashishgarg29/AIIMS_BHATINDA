@@ -86,8 +86,7 @@ export function StaffDirectoryClient({
                     {staff.fullName}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Mail className="h-4 w-4 text-slate-400" />
+                <div className="flex items-center text-slate-600">
                   <span className="truncate">{staff.email}</span>
                 </div>
                 <div className="flex items-center">

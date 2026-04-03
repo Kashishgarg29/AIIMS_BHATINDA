@@ -128,9 +128,8 @@ export default async function PocStudentRecordMasterView(props: {
     const globalStatus = student.medicalRecord?.status || "PENDING";
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <>
             <RealTimeRefresher />
-            <Navbar role={session?.user?.role || "SCHOOL_POC"} userName={session?.user?.name || "School Representative"} />
 
             <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -205,6 +204,6 @@ export default async function PocStudentRecordMasterView(props: {
                     studentId={studentId}
                 />
             </main>
-        </div>
+        </>
     );
 }

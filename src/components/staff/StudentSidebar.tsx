@@ -39,6 +39,7 @@ export function StudentSidebar({ students, eventId, formConfig, currentUserId }:
 
   const isReferredView = pathname.includes("/referred") || searchParams.get("from") === "referred";
   const isObservationView = pathname.includes("/observation") || searchParams.get("from") === "observation";
+  const isPoc = pathname.startsWith("/poc");
 
   const getFilteredStudents = (flag: "R" | "O") => {
     return students.filter((stud) => {
@@ -120,7 +121,8 @@ export function StudentSidebar({ students, eventId, formConfig, currentUserId }:
               const isReferred = Object.values(student.medicalRecord?.data || {}).some((catData: any) => catData?.status_nor === "R");
               const isObservation = Object.values(student.medicalRecord?.data || {}).some((catData: any) => catData?.status_nor === "O");
 
-              const navUrl = getStudentNavigationUrl(student.id, eventId, currentUserId || "", formConfig, isAdmin || false, isReferredView);
+              const effectiveUserId = currentUserId || (session?.user as any)?.id || "";
+              const navUrl = getStudentNavigationUrl(student.id, eventId, effectiveUserId, formConfig, isAdmin || false, isReferredView, false, isPoc);
               const queryString = isReferredView ? '?from=referred' : isObservationView ? '?from=observation' : '';
 
               return (

@@ -34,17 +34,13 @@ export default async function PocEventWorkspace({ params }: { params: Promise<{ 
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
-            <Navbar role={session?.user?.role || "SCHOOL_POC"} userName={session?.user?.name || "School Representative"} />
-
-            <PocWorkspaceClient
-                eventId={event.id}
-                schoolName={event.schoolDetails}
-                eventDate={event.eventDate}
-                location="Main Campus" // Fallback since it's not in schema currently
-                students={event.students}
-                pocEmail={event.pocEmail || "Not Assigned"}
-            />
-        </div>
+        <PocWorkspaceClient
+            eventId={event.id}
+            schoolName={event.schoolDetails}
+            eventDate={event.eventDate}
+            location="Main Campus" // Fallback since it's not in schema currently
+            students={event.students}
+            pocEmail={event.pocEmail || "Not Assigned"}
+        />
     );
 }

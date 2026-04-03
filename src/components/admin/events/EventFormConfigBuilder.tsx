@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface FieldDefinition {
   id: string;
   label: string;
+  isDefault?: boolean;
 }
 
 interface CustomCategory {
@@ -22,83 +23,148 @@ interface CustomCategory {
 
 const CATEGORIES: { id: string; title: string; fields: FieldDefinition[] }[] = [
   {
-    id: "demographics",
-    title: "General Information",
+    id: "general_examination_merged",
+    title: "1. Demographics & Vitals",
     fields: [
-      { id: "dob", label: "Date of Birth" },
+      { id: "name", label: "Name", isDefault: true },
+      { id: "dob", label: "Date of Birth", isDefault: true },
+      { id: "age", label: "Age", isDefault: true },
+      { id: "sex", label: "Sex", isDefault: true },
+      { id: "classSection", label: "Class/Section", isDefault: true },
+      { id: "bloodGroup", label: "Blood Group", isDefault: true },
       { id: "fatherName", label: "Father's Name" },
       { id: "fatherOccupation", label: "Father's Occupation" },
       { id: "motherName", label: "Mother's Name" },
       { id: "motherOccupation", label: "Mother's Occupation" },
-      { id: "mailingAddress", label: "Mailing Address" },
+      { id: "address", label: "Address" },
       { id: "pinCode", label: "Pin Code" },
-      { id: "phone", label: "Phone (Landline)" },
-      { id: "mobile", label: "Mobile (Primary)" },
+      { id: "phone", label: "Phone" },
+      { id: "mobile", label: "Mobile", isDefault: true },
+      { id: "familyPhysicianName", label: "Family Physician Name" },
+      { id: "physicianContact", label: "Physician Contact" },
+      { id: "jaundice", label: "Jaundice" },
+      { id: "allergies", label: "Allergies", isDefault: true },
+      { id: "bloodTransfusion", label: "Blood Transfusion" },
+      { id: "majorIllness", label: "Any major illness/operation", isDefault: true },
+      { id: "dentalImplant", label: "Dental Implant" },
+      { id: "braces", label: "Braces" },
+      { id: "spectaclesRight", label: "Spectacles / Lens (Right Eye)" },
+      { id: "spectaclesLeft", label: "Spectacles / Lens (Left Eye)" },
+      { id: "height", label: "Height (cm)", isDefault: true },
+      { id: "weight", label: "Weight (kg)", isDefault: true },
+      { id: "anaemia", label: "Anaemia", isDefault: true },
+      { id: "systemicExam", label: "Systemic Examination" },
     ],
   },
   {
-    id: "ent",
-    title: "ENT Examination",
+    id: "vaccination_details",
+    title: "2. Immunization Status",
     fields: [
-      { id: "hearing", label: "Hearing" },
-      { id: "earExam", label: "Ear Exam" },
-      { id: "noseExam", label: "Nose Exam" },
-      { id: "throatExam", label: "Throat / Tonsils" },
-      { id: "entRemarks", label: "ENT Remarks" },
+      { id: "hepB1", label: "Hepatitis B (1st Dose)", isDefault: true },
+      { id: "hepB2", label: "Hepatitis B (2nd Dose)" },
+      { id: "hepB3", label: "Hepatitis B (3rd Dose)" },
+      { id: "typhoid", label: "Typhoid", isDefault: true },
+      { id: "dptPolio", label: "DPT / Polio Booster" },
+      { id: "tetanus", label: "Tetanus", isDefault: true },
     ],
   },
   {
-    id: "communityMed",
-    title: "Community Medicine",
+    id: "ent_examination",
+    title: "3. ENT Examination",
     fields: [
-      { id: "height", label: "Height (in cms)" },
-      { id: "weight", label: "Weight (in kgs)" },
-      { id: "bloodGroup", label: "Blood Group" },
-      { id: "generalAppearance", label: "General Appearance" },
-      { id: "majorIllness", label: "Any Major illness or operation in past" },
+      { id: "earIssues", label: "Ear Issues", isDefault: true },
+      { id: "noseIssues", label: "Nose Issues", isDefault: true },
+      { id: "throatIssues", label: "Throat Issues", isDefault: true },
+      { id: "mouthBreathing", label: "Mouth Breathing" },
+      { id: "presentComplaint", label: "Present Complaint", isDefault: true },
       { id: "currentMedication", label: "Current Medication" },
-      { id: "doctorRemarks", label: "Doctor's Remarks" },
+      { id: "otherInfo", label: "Other Information" },
+      { id: "doctorRemarks", label: "Doctor's Remarks", isDefault: true },
     ],
   },
   {
-    id: "dental",
-    title: "Dental Examination",
+    id: "dental_examination",
+    title: "4. Dental Examination",
     fields: [
-      { id: "oralHygiene", label: "Oral Hygiene" },
-      { id: "gums", label: "Gums Condition" },
-      { id: "cavities", label: "Cavities / Caries" },
-      { id: "dentalFindings", label: "Other findings" },
-      { id: "dentalRemarks", label: "Dental Remarks" },
+      { id: "rottenTeeth", label: "Rotten Teeth" },
+      { id: "cavities", label: "Cavities", isDefault: true },
+      { id: "gumCondition", label: "Gum Condition", isDefault: true },
+      { id: "badBreath", label: "Bad Breath" },
+      { id: "presentComplaint", label: "Present Complaint", isDefault: true },
+      { id: "currentMedication", label: "Current Medication" },
+      { id: "otherInfo", label: "Other Information" },
+      { id: "doctorRemarks", label: "Doctor's Remarks", isDefault: true },
     ],
   },
   {
-    id: "optical",
-    title: "Optical Examination",
+    id: "optical_examination",
+    title: "5. Ophthalmology Examination",
     fields: [
-      { id: "visionRight", label: "Vision (Right Eye)" },
-      { id: "visionLeft", label: "Vision (Left Eye)" },
-      { id: "colorVision", label: "Color Vision" },
-      { id: "opticalIssues", label: "Squint / Other issues" },
-      { id: "spectacles", label: "Uses Spectacles / Lenses" },
-      { id: "opticalRemarks", label: "Optical Remarks" },
+      { id: "visionRight", label: "Vision (Right Eye)", isDefault: true },
+      { id: "visionLeft", label: "Vision (Left Eye)", isDefault: true },
+      { id: "cannotSeeBoard", label: "Cannot see board", isDefault: true },
+      { id: "rubsEyes", label: "Rubs eyes frequently" },
+      { id: "spectacles", label: "Spectacles", isDefault: true },
+      { id: "presentComplaint", label: "Present Complaint", isDefault: true },
+      { id: "currentMedication", label: "Current Medication" },
+      { id: "otherInfo", label: "Other Information" },
+      { id: "doctorRemarks", label: "Doctor's Remarks", isDefault: true },
     ],
   },
   {
-    id: "skin",
-    title: "Skin Examination",
+    id: "skin_examination",
+    title: "6. Dermatology Examination",
     fields: [
-      { id: "skinCondition", label: "General Skin Condition" },
-      { id: "infections", label: "Infections / Rashes" },
-      { id: "skin_Acne", label: "Skin: Acne" },
-      { id: "skin_Eczema", label: "Skin: Eczema" },
-      { id: "skin_Warts", label: "Skin: Warts" },
-      { id: "skin_Lice", label: "Skin: Lice" },
-      { id: "skinRemarks", label: "Skin Remarks" },
+      { id: "skinCondition", label: "Skin Condition", isDefault: true },
+      { id: "nailsHair", label: "Nails & Hair Condition" },
+      { id: "whitePatches", label: "White Patches" },
+      { id: "cracksMouth", label: "Cracks at mouth corner" },
+      { id: "presentComplaint", label: "Present Complaint", isDefault: true },
+      { id: "currentMedication", label: "Current Medication" },
+      { id: "otherInfo", label: "Other Information" },
+      { id: "doctorRemarks", label: "Doctor's Remarks", isDefault: true },
     ],
-  }
+  },
+  {
+    id: "system_wise_examination",
+    title: "7. Systemic Examination",
+    fields: [
+      { id: "limpingGait", label: "Locomotor System: Limping Gait" },
+      { id: "abdomenIssues", label: "Abdomen: Issues" },
+      { id: "breathlessness", label: "Respiratory System: Breathlessness" },
+      { id: "cardioIssues", label: "Cardiovascular System: Issues" },
+      { id: "cnsIssues", label: "Central Nervous System: Issues" },
+      { id: "presentComplaint", label: "Present Complaint", isDefault: true },
+      { id: "currentMedication", label: "Current Medication" },
+      { id: "otherInfo", label: "Other Information" },
+      { id: "doctorRemarks", label: "Doctor's Remarks", isDefault: true },
+    ],
+  },
+  {
+    id: "symptoms",
+    title: "8. Clinical Presentation & Symptoms",
+    fields: [
+      { id: "scratchesHead", label: "Scratches head frequently" },
+      { id: "headache", label: "Complains of headache", isDefault: true },
+      { id: "cannotSeeBoardSymptoms", label: "Cannot see board", isDefault: true },
+      { id: "pullsEars", label: "Pulls ears" },
+      { id: "nailBiting", label: "Nail biting" },
+      { id: "frequentUrination", label: "Frequent urination" },
+      { id: "diarrhoea", label: "Diarrhoea", isDefault: true },
+      { id: "vomiting", label: "Vomiting", isDefault: true },
+      { id: "stammering", label: "Stammering" },
+      { id: "faintingEpisodes", label: "Fainting episodes", isDefault: true },
+      { id: "anyOtherSymptoms", label: "Any other" },
+    ],
+  },
 ];
 
-const DEFAULT_ALL_FIELDS = CATEGORIES.reduce((acc, cat) => {
+const DEFAULT_NECESSARY_FIELDS = CATEGORIES.reduce((acc, cat) => {
+  acc[cat.id] = cat.fields.filter(f => f.isDefault).map(f => f.id);
+  return acc;
+}, {} as Record<string, string[]>);
+
+const ALL_MAPPED_FIELDS = CATEGORIES.reduce((acc, cat) => {
   acc[cat.id] = cat.fields.map(f => f.id);
   return acc;
 }, {} as Record<string, string[]>);
@@ -127,18 +193,36 @@ export function EventFormConfigBuilder({
     if (initialConfig && Object.keys(initialConfig).length > 0) {
       const pureConfig = { ...initialConfig };
       delete pureConfig.customCategories;
-      return Object.keys(pureConfig).length > 0 ? pureConfig : DEFAULT_ALL_FIELDS;
+
+      // Ensure that if the database holds an old format (e.g. "demographics" instead of "general_examination_merged"),
+      // we correctly fall back to the defaults instead of loading blank checklists.
+      const hasValidNewCategories = CATEGORIES.some(c => Array.isArray(pureConfig[c.id]));
+
+      if (!hasValidNewCategories) {
+        return DEFAULT_NECESSARY_FIELDS;
+      }
+
+      return Object.keys(pureConfig).length > 0 ? pureConfig : DEFAULT_NECESSARY_FIELDS;
     }
-    return DEFAULT_ALL_FIELDS;
+    return DEFAULT_NECESSARY_FIELDS;
   });
 
   const selectAll = () => {
-    const all = { ...DEFAULT_ALL_FIELDS };
+    const all = { ...ALL_MAPPED_FIELDS };
     customSections.forEach(c => {
       all[c.id] = c.fields.map(f => f.id);
     });
     setConfig(all);
   };
+
+  const selectDefaults = () => {
+    const defaults = { ...DEFAULT_NECESSARY_FIELDS };
+    customSections.forEach(c => {
+      defaults[c.id] = []; 
+    });
+    setConfig(defaults);
+  };
+
   const clearAll = () => setConfig({});
 
   const toggleField = (categoryId: string, fieldId: string, checked: boolean) => {
@@ -244,6 +328,7 @@ export function EventFormConfigBuilder({
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={selectDefaults}>Restore Defaults</Button>
           <Button variant="outline" onClick={selectAll}>Select All</Button>
           <Button variant="outline" onClick={clearAll}>Clear All</Button>
           <Button onClick={handleSave} disabled={isSaving}>
@@ -268,7 +353,7 @@ export function EventFormConfigBuilder({
       )}
 
       {/* @ts-expect-error shadcn ui type mismatch */}
-      <Accordion type="multiple" defaultValue={CATEGORIES.map(c => c.id)} className="w-full">
+      <Accordion type="multiple" className="w-full">
         {allCategoriesToRender.map((cat) => {
           const isCustom = cat.id.startsWith('custom_');
 
@@ -327,9 +412,14 @@ export function EventFormConfigBuilder({
                         ) : (
                           <label
                             htmlFor={`${cat.id}-${field.id}`}
-                            className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
                           >
-                            {field.label}
+                            <span>{field.label}</span>
+                            {field.isDefault && (
+                              <span className="ml-1.5 text-[9px] text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-1 py-0.5 rounded-sm">
+                                Default
+                              </span>
+                            )}
                           </label>
                         )}
                       </div>

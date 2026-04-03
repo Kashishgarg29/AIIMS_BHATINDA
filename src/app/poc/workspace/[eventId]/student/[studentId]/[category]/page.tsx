@@ -24,8 +24,8 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
     const formConfig = ((event as any)?.formConfig as Record<string, any>) || {};
     const customCategories = Array.isArray(formConfig.customCategories) ? formConfig.customCategories : [];
 
-    // Verify valid category - POC only allowed in two
-    const validPOC_Categories = ["demographics", "communityMed"];
+    // Verify valid category - POC only allowed in strict subsets
+    const validPOC_Categories = ["general_examination_merged", "vaccination_details", "symptoms"];
     if (!validPOC_Categories.includes(category) && !isAdmin) {
         // Other categories exist but POC shouldn't access the edit form directly
         // Let's allow view, but it's completely locked out.
@@ -59,9 +59,9 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
     let isSectionLockedForUser = false;
     let readOnlyReason = "";
 
-    if (category !== "communityMed" && category !== "demographics") {
+    if (!validPOC_Categories.includes(category)) {
         isSectionLockedForUser = true;
-        readOnlyReason = "School representatives can only edit the General Information and Community Medicine sections.";
+        readOnlyReason = "School representatives can only edit the Demographics, Immunization, and Symptoms sections.";
     } else if (dynamicStatus !== "UPCOMING") {
         // For communityMed & demographics, POC can edit till day before the event
         isSectionLockedForUser = true;

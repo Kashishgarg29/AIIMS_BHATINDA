@@ -164,378 +164,210 @@ export function CategoryEditFormClient({
   };
 
   const renderFormContent = () => {
-    switch (category) {
-      case "demographics":
+    // Helper to render a field based on its common type or default to Input
+    const renderField = (fieldId: string, label: string) => {
+      const isRequired = requiredFields.includes(fieldId);
+      const value = formData[fieldId];
+      const isFieldReadOnly = isReadOnly || isLockedBy;
+
+      // READ-ONLY VIEW: Show as an inline "Label: Value" entry
+      if (isFieldReadOnly) {
         return (
-          <div className="space-y-4">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 border-b pb-2 mb-3">Personal & Medical Information</h2>
-
-              {/* Read-only Student Info */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-slate-50 p-3 rounded-md border border-slate-100">
-                <div className="space-y-0.5">
-                  <Label className="text-[10px] uppercase tracking-wider text-slate-500">Student Name</Label>
-                  <p className="font-bold text-slate-900 text-sm leading-tight">{student?.firstName} {student?.lastName}</p>
-                </div>
-                <div className="space-y-0.5">
-                  <Label className="text-[10px] uppercase tracking-wider text-slate-500">Class / Section</Label>
-                  <p className="font-bold text-slate-900 text-sm leading-tight">{student?.classSec}</p>
-                </div>
-                <div className="space-y-0.5">
-                  <Label className="text-[10px] uppercase tracking-wider text-slate-500">Age / Gender</Label>
-                  <p className="font-bold text-slate-900 text-sm leading-tight">{student?.age} yrs / {student?.gender}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Date of Birth {req("dob")}</Label>
-                  <Input
-                    type="date"
-                    value={formData.dob || ""}
-                    onChange={e => handleFieldChange("dob", e.target.value)}
-                    className="bg-white h-8 text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Editable Family Info */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-                <div className="space-y-1">
-                  <Label className="text-xs">Father's Name {req("fatherName")}</Label>
-                  <Input className="h-8 text-sm" value={formData.fatherName || ""} onChange={e => handleFieldChange("fatherName", e.target.value)} placeholder="Enter father's name" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Father's Occupation {req("fatherOccupation")}</Label>
-                  <Input className="h-8 text-sm" value={formData.fatherOccupation || ""} onChange={e => handleFieldChange("fatherOccupation", e.target.value)} placeholder="e.g. Business, Service" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Mother's Name {req("motherName")}</Label>
-                  <Input className="h-8 text-sm" value={formData.motherName || ""} onChange={e => handleFieldChange("motherName", e.target.value)} placeholder="Enter mother's name" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Mother's Occupation {req("motherOccupation")}</Label>
-                  <Input className="h-8 text-sm" value={formData.motherOccupation || ""} onChange={e => handleFieldChange("motherOccupation", e.target.value)} placeholder="e.g. Homemaker" />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Mailing Address {req("mailingAddress")}</Label>
-                  <Textarea className="min-h-[60px] text-sm" value={formData.mailingAddress || ""} onChange={e => handleFieldChange("mailingAddress", e.target.value)} placeholder="Full home address" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Pin Code {req("pinCode")}</Label>
-                    <Input className="h-8 text-sm" value={formData.pinCode || ""} onChange={e => handleFieldChange("pinCode", e.target.value)} placeholder="6-digit PIN" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Phone (Landline) {req("phone")}</Label>
-                    <Input className="h-8 text-sm" value={formData.phone || ""} onChange={e => handleFieldChange("phone", e.target.value)} placeholder="Optional" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Mobile (Primary) {req("mobile")}</Label>
-                    <Input className="h-8 text-sm" value={formData.mobile || ""} onChange={e => handleFieldChange("mobile", e.target.value)} placeholder="Primary contact" />
-                  </div>
-                </div>
-              </div>
-            </section>
+          <div key={fieldId} className={`flex items-baseline gap-2 py-1.5 border-b border-slate-100 last:border-0 ${(fieldId === "doctorRemarks" || fieldId === "presentComplaint" || fieldId === "otherInfo" || fieldId === "address" || fieldId === "anyOtherSymptoms") ? "md:col-span-2" : ""}`}>
+            <span className="text-[11px] font-black uppercase text-slate-400 tracking-tight shrink-0 min-w-[140px]">
+              {label}{isRequired && <span className="text-red-500 ml-0.5">*</span>}:
+            </span>
+            <span className={`text-sm ${value ? 'text-slate-900 font-black' : 'text-slate-300 italic font-medium'}`}>
+              {value || "Not Recorded"}
+            </span>
           </div>
         );
+      }
 
-      case "ent":
+      // EDITABLE VIEW: Standard form controls
+      if (fieldId === "doctorRemarks" || fieldId === "presentComplaint" || fieldId === "otherInfo" || fieldId === "address" || fieldId === "anyOtherSymptoms") {
         return (
-          <div className="space-y-4">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 border-b pb-2 mb-3">ENT Examination</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Hearing {req("hearing")}</Label>
-                  <Select value={formData.hearing || ""} onValueChange={(val) => handleFieldChange("hearing", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Normal', 'Impaired Right', 'Impaired Left', 'Impaired Both'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Ear Exam {req("earExam")}</Label>
-                  <Select value={formData.earExam || ""} onValueChange={(val) => handleFieldChange("earExam", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Normal', 'Wax', 'Discharge', 'Other'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Nose Exam {req("noseExam")}</Label>
-                  <Select value={formData.noseExam || ""} onValueChange={(val) => handleFieldChange("noseExam", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Normal', 'Deviated Septum', 'Polyps', 'Other'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Throat / Tonsils {req("throatExam")}</Label>
-                  <Select value={formData.throatExam || ""} onValueChange={(val) => handleFieldChange("throatExam", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Normal', 'Enlarged Tonsils', 'Inflammation', 'Other'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-semibold text-slate-800">Observations / Remarks {req("entRemarks")}</Label>
-                <Textarea className="min-h-[60px] text-sm" value={formData.entRemarks || ""} onChange={e => handleFieldChange("entRemarks", e.target.value)} placeholder="Any other ENT observations..." />
-              </div>
-            </section>
+          <div key={fieldId} className="space-y-1.5 md:col-span-2">
+            <Label className="text-xs font-bold text-slate-700">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
+            <Textarea
+              className="text-sm min-h-[80px]"
+              value={formData[fieldId] || ""}
+              onChange={e => handleFieldChange(fieldId, e.target.value)}
+              placeholder={`Enter ${label.toLowerCase()}...`}
+            />
           </div>
         );
+      }
 
-      case "communityMed":
-        return (
-          <div className="space-y-4">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 border-b pb-2 mb-3">General Examination & Vitals</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-                <div className="space-y-1">
-                  <Label className="text-sm">Height (in cms) {req("height")}</Label>
-                  <Input type="number" className="h-8 text-sm" value={formData.height || ""} onChange={e => handleFieldChange("height", e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm">Weight (in kgs) {req("weight")}</Label>
-                  <Input type="number" className="h-8 text-sm" value={formData.weight || ""} onChange={e => handleFieldChange("weight", e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm">Blood Group {req("bloodGroup")}</Label>
-                  <Select value={formData.bloodGroup || ""} onValueChange={(val) => handleFieldChange("bloodGroup", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Group" /></SelectTrigger>
-                    <SelectContent>
-                      {['O+', 'A+', 'B+', 'AB+', 'A-', 'B-', 'AB-', 'O-'].map(bg => (
-                        <SelectItem key={bg} value={bg}>{bg}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">General Appearance</Label>
-                  <Select
-                    value={formData.generalAppearance || ""}
-                    onValueChange={(val) => handleFieldChange("generalAppearance", val)}
-                    disabled={isPOC}
-                  >
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Healthy', 'Undernourished', 'Overweight', 'Obese'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                <div className="space-y-1">
-                  <Label className="text-sm">Any Major illness/operation {req("majorIllness")}</Label>
-                  <Textarea
-                    className="min-h-[60px] text-sm"
-                    value={formData.majorIllness || ""}
-                    onChange={e => handleFieldChange("majorIllness", e.target.value)}
-                    disabled={isPOC}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm">Current Medication {req("currentMedication")}</Label>
-                  <Textarea
-                    className="min-h-[60px] text-sm"
-                    value={formData.currentMedication || ""}
-                    onChange={e => handleFieldChange("currentMedication", e.target.value)}
-                    disabled={isPOC}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-semibold text-slate-800">Doctor's Remarks {req("doctorRemarks")}</Label>
-                <Textarea
-                  className="min-h-[60px] text-sm"
-                  value={formData.doctorRemarks || ""}
-                  onChange={e => handleFieldChange("doctorRemarks", e.target.value)}
-                  disabled={isPOC}
-                />
-              </div>
-            </section>
-          </div>
-        );
+      // Default to standard Input
+      return (
+        <div key={fieldId} className="space-y-1.5">
+          <Label className="text-xs font-bold text-slate-700">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
+          <Input
+            className="h-9 text-sm"
+            value={formData[fieldId] || ""}
+            onChange={e => handleFieldChange(fieldId, e.target.value)}
+            placeholder={`Enter ${label.toLowerCase()}...`}
+          />
+        </div>
+      );
+    };
 
-      case "dental":
-        return (
-          <div className="space-y-4">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 border-b pb-2 mb-3">Dental Examination</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Oral Hygiene {req("oralHygiene")}</Label>
-                  <Select value={formData.oralHygiene || ""} onValueChange={(val) => handleFieldChange("oralHygiene", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Good', 'Fair', 'Poor'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Gums Condition {req("gums")}</Label>
-                  <Select value={formData.gums || ""} onValueChange={(val) => handleFieldChange("gums", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Healthy', 'Bleeding', 'Swollen', 'Other'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Cavities / Caries {req("cavities")}</Label>
-                  <Input className="h-8 text-sm" value={formData.cavities || ""} onChange={e => handleFieldChange("cavities", e.target.value)} placeholder="e.g. None" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Other findings {req("dentalFindings")}</Label>
-                  <Input className="h-8 text-sm" value={formData.dentalFindings || ""} onChange={e => handleFieldChange("dentalFindings", e.target.value)} placeholder="Plaque/Calculus" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-semibold text-slate-800">Remarks / Recommendations {req("dentalRemarks")}</Label>
-                <Textarea className="min-h-[60px] text-sm" value={formData.dentalRemarks || ""} onChange={e => handleFieldChange("dentalRemarks", e.target.value)} placeholder="Any dental observations..." />
-              </div>
-            </section>
-          </div>
-        );
+    // Find the category definition from our list of 8
+    const CATEGORIES_REF = [
+      {
+        id: "general_examination_merged",
+        title: "Demographics & Vitals",
+        fields: [
+          { id: "dob", label: "Date of Birth" },
+          { id: "age", label: "Age" },
+          { id: "sex", label: "Sex" },
+          { id: "bloodGroup", label: "Blood Group" },
+          { id: "fatherName", label: "Father's Name" },
+          { id: "fatherOccupation", label: "Father's Occupation" },
+          { id: "motherName", label: "Mother's Name" },
+          { id: "motherOccupation", label: "Mother's Occupation" },
+          { id: "address", label: "Address" },
+          { id: "pinCode", label: "Pin Code" },
+          { id: "phone", label: "Phone" },
+          { id: "mobile", label: "Mobile" },
+          { id: "allergies", label: "Allergies" },
+          { id: "majorIllness", label: "Any major illness/operation" },
+          { id: "height", label: "Height (cm)" },
+          { id: "weight", label: "Weight (kg)" },
+          { id: "anaemia", label: "Anaemia" },
+        ],
+      },
+      {
+        id: "vaccination_details",
+        title: "Immunization Status",
+        fields: [
+          { id: "hepB1", label: "Hepatitis B (1st Dose)" },
+          { id: "hepB2", label: "Hepatitis B (2nd Dose)" },
+          { id: "hepB3", label: "Hepatitis B (3rd Dose)" },
+          { id: "typhoid", label: "Typhoid" },
+          { id: "tetanus", label: "Tetanus" },
+        ],
+      },
+      {
+        id: "ent_examination",
+        title: "ENT Examination",
+        fields: [
+          { id: "earIssues", label: "Ear Issues" },
+          { id: "noseIssues", label: "Nose Issues" },
+          { id: "throatIssues", label: "Throat Issues" },
+          { id: "presentComplaint", label: "Present Complaint" },
+          { id: "doctorRemarks", label: "Doctor's Remarks" },
+        ],
+      },
+      {
+        id: "dental_examination",
+        title: "Dental Examination",
+        fields: [
+          { id: "cavities", label: "Cavities" },
+          { id: "gumCondition", label: "Gum Condition" },
+          { id: "presentComplaint", label: "Present Complaint" },
+          { id: "doctorRemarks", label: "Doctor's Remarks" },
+        ],
+      },
+      {
+        id: "optical_examination",
+        title: "Ophthalmology Examination",
+        fields: [
+          { id: "visionRight", label: "Vision (Right Eye)" },
+          { id: "visionLeft", label: "Vision (Left Eye)" },
+          { id: "cannotSeeBoard", label: "Cannot see board" },
+          { id: "spectacles", label: "Spectacles" },
+          { id: "presentComplaint", label: "Present Complaint" },
+          { id: "doctorRemarks", label: "Doctor's Remarks" },
+        ],
+      },
+      {
+        id: "skin_examination",
+        title: "Dermatology Examination",
+        fields: [
+          { id: "skinCondition", label: "Skin Condition" },
+          { id: "whitePatches", label: "White Patches" },
+          { id: "presentComplaint", label: "Present Complaint" },
+          { id: "doctorRemarks", label: "Doctor's Remarks" },
+        ],
+      },
+      {
+        id: "system_wise_examination",
+        title: "Systemic Examination",
+        fields: [
+          { id: "limpingGait", label: "Limping Gait" },
+          { id: "abdomenIssues", label: "Abdomen Issues" },
+          { id: "presentComplaint", label: "Present Complaint" },
+          { id: "doctorRemarks", label: "Doctor's Remarks" },
+        ],
+      },
+      {
+        id: "symptoms",
+        title: "Clinical Presentation & Symptoms",
+        fields: [
+          { id: "headache", label: "Complains of headache" },
+          { id: "cannotSeeBoardSymptoms", label: "Cannot see board" },
+          { id: "diarrhoea", label: "Diarrhoea" },
+          { id: "vomiting", label: "Vomiting" },
+          { id: "faintingEpisodes", label: "Fainting episodes" },
+          { id: "anyOtherSymptoms", label: "Any other symptoms" },
+        ],
+      },
+    ];
 
-      case "optical":
-        return (
-          <div className="space-y-4">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 border-b pb-2 mb-3">Optical Examination</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Vision (Right) {req("visionRight")}</Label>
-                  <Select value={formData.visionRight || ""} onValueChange={(val) => handleFieldChange("visionRight", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['6/6', '6/9', '6/12', '6/18', '6/24', '6/36', '6/60', 'Other'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Vision (Left) {req("visionLeft")}</Label>
-                  <Select value={formData.visionLeft || ""} onValueChange={(val) => handleFieldChange("visionLeft", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['6/6', '6/9', '6/12', '6/18', '6/24', '6/36', '6/60', 'Other'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Color Vision {req("colorVision")}</Label>
-                  <Select value={formData.colorVision || ""} onValueChange={(val) => handleFieldChange("colorVision", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Normal', 'Deficient'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Squint / Other {req("opticalIssues")}</Label>
-                  <Input className="h-8 text-sm" value={formData.opticalIssues || ""} onChange={e => handleFieldChange("opticalIssues", e.target.value)} />
-                </div>
-              </div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox id="spectacles" checked={formData.spectacles || false} onCheckedChange={(c) => handleFieldChange("spectacles", c)} />
-                <label htmlFor="spectacles" className="text-sm font-medium leading-none">Uses Spectacles / Lenses</label>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-semibold text-slate-800">Remarks / Recommendations {req("opticalRemarks")}</Label>
-                <Textarea className="min-h-[60px] text-sm" value={formData.opticalRemarks || ""} onChange={e => handleFieldChange("opticalRemarks", e.target.value)} placeholder="Any optical observations..." />
-              </div>
-            </section>
-          </div>
-        );
+    const currentCatDef = CATEGORIES_REF.find(c => c.id === category);
 
-      case "skin":
-        return (
-          <div className="space-y-4">
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 border-b pb-2 mb-3">Skin Examination</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">General Skin Condition {req("skinCondition")}</Label>
-                  <Select value={formData.skinCondition || ""} onValueChange={(val) => handleFieldChange("skinCondition", val)}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                    <SelectContent>
-                      {['Normal', 'Dry', 'Oily', 'Lesions present'].map(op => (
-                        <SelectItem key={op} value={op}>{op}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-slate-800">Infections / Rashes {req("infections")}</Label>
-                  <Input className="h-8 text-sm" value={formData.infections || ""} onChange={e => handleFieldChange("infections", e.target.value)} placeholder="e.g. Scabies, Fungal, None" />
-                </div>
-              </div>
-              <div className="flex gap-4 mb-4">
-                {['Acne', 'Eczema', 'Warts', 'Lice'].map(item => (
-                  <div key={item} className="flex items-center space-x-1.5">
-                    <Checkbox id={`skin_${item}`} className="h-4 w-4" checked={formData[`skin_${item}`] || false} onCheckedChange={(c) => handleFieldChange(`skin_${item}`, c)} />
-                    <label htmlFor={`skin_${item}`} className="text-xs font-medium leading-none">{item}</label>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-semibold text-slate-800">Remarks / Recommendations {req("skinRemarks")}</Label>
-                <Textarea className="min-h-[60px] text-sm" value={formData.skinRemarks || ""} onChange={e => handleFieldChange("skinRemarks", e.target.value)} placeholder="Any skin observations..." />
-              </div>
-            </section>
-          </div>
-        );
+    if (currentCatDef) {
+      // Only render fields that are either required OR were explicitly defined in the config for this event
+      // However, to ensure visibility, we render all fields from the definition that match the config
+      const fieldsToRender = currentCatDef.fields.filter(f => requiredFields.includes(f.id));
 
-      default:
-        if (customCategoryBlock) {
-          return (
-            <div className="space-y-4">
-              <section>
-                <div className="space-y-4 mb-4">
-                  {customCategoryBlock.fields.map((field: any) => (
-                    <div key={field.id} className="space-y-1">
-                      <Label className="text-sm font-semibold text-slate-800">{field.label} {req(field.id)}</Label>
-                      <Textarea
-                        className="min-h-[60px] text-sm"
-                        value={formData[field.id] || ""}
-                        onChange={e => handleFieldChange(field.id, e.target.value)}
-                        placeholder={`Enter ${field.label}...`}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          );
-        }
-        return <div>Invalid Category</div>;
+      return (
+        <div className="space-y-6">
+          <section>
+            <h2 className="text-lg font-black text-slate-800 border-b pb-2 mb-5 flex items-center gap-2">
+              <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
+              {currentCatDef.title}
+            </h2>
+
+            {fieldsToRender.length === 0 ? (
+              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center">
+                <p className="text-sm text-slate-500 font-medium italic">No fields were marked as required for this section in the configuration.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                {fieldsToRender.map(f => renderField(f.id, f.label))}
+              </div>
+            )}
+          </section>
+        </div>
+      );
     }
+
+    // Custom Category Fallback
+    if (customCategoryBlock) {
+      return (
+        <div className="space-y-6">
+          <section>
+            <h2 className="text-lg font-black text-slate-800 border-b pb-2 mb-5 flex items-center gap-2">
+              <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
+              {customCategoryBlock.title}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+              {customCategoryBlock.fields.map((field: any) => renderField(field.id, field.label))}
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-12 text-center bg-slate-50 rounded-xl border border-slate-200">
+        <AlertCircle className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Section not configured correctly</p>
+      </div>
+    );
   };
 
   return (
@@ -647,7 +479,7 @@ export function CategoryEditFormClient({
           </CardContent>
         </Card>
 
-        {category !== "demographics" && (
+        {category !== "general_examination_merged" && (
           <Card className="shadow-sm border-slate-200 relative mb-6">
             {(isReadOnly || isLockedBy || hasTimedOut) && (
               <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Read Only / Locked" />
@@ -656,26 +488,36 @@ export function CategoryEditFormClient({
               <div className="flex items-center gap-3">
                 <Label className="text-xs font-black tracking-wide uppercase text-slate-700 shrink-0">Assessment <span className="text-red-500">*</span></Label>
                 <div className="flex gap-2 flex-1">
-                  <div
-                    onClick={() => !isReadOnly && !isLockedBy && !hasTimedOut && setFormData((prev: any) => ({ ...prev, status_nor: 'N' }))}
-                    className={`flex-1 cursor-pointer border-2 rounded-lg px-3 py-1.5 text-center transition-all ${formData.status_nor === 'N' ? 'bg-green-100 border-green-500 shadow-sm' : 'bg-white border-slate-200 hover:border-green-300'}`}>
-                    <span className={`font-black text-base ${formData.status_nor === 'N' ? 'text-green-700' : 'text-slate-400'}`}>N</span>
-                    <span className={`text-[9px] font-bold uppercase tracking-widest ml-1 ${formData.status_nor === 'N' ? 'text-green-800' : 'text-slate-500'}`}>Normal</span>
-                  </div>
-                  <div
-                    onClick={() => !isReadOnly && !isLockedBy && !hasTimedOut && setFormData((prev: any) => ({ ...prev, status_nor: 'O' }))}
-                    className={`flex-1 cursor-pointer border-2 rounded-lg px-3 py-1.5 text-center transition-all ${formData.status_nor === 'O' ? 'bg-amber-100 border-amber-500 shadow-sm' : 'bg-white border-slate-200 hover:border-amber-300'}`}>
-                    <span className={`font-black text-base ${formData.status_nor === 'O' ? 'text-amber-700' : 'text-slate-400'}`}>O</span>
-                    <span className={`text-[9px] font-bold uppercase tracking-widest ml-1 ${formData.status_nor === 'O' ? 'text-amber-800' : 'text-slate-500'}`}>Observe</span>
-                  </div>
-                  <div
-                    onClick={() => !isReadOnly && !isLockedBy && !hasTimedOut && setFormData((prev: any) => ({ ...prev, status_nor: 'R' }))}
-                    className={`flex-1 cursor-pointer border-2 rounded-lg px-3 py-1.5 text-center transition-all ${formData.status_nor === 'R' ? 'bg-red-100 border-red-500 shadow-sm' : 'bg-white border-slate-200 hover:border-red-300'}`}>
-                    <span className={`font-black text-base ${formData.status_nor === 'R' ? 'text-red-700' : 'text-slate-400'}`}>R</span>
-                    <span className={`text-[9px] font-bold uppercase tracking-widest ml-1 ${formData.status_nor === 'R' ? 'text-red-800' : 'text-slate-500'}`}>Referred</span>
-                  </div>
+                  {/* Normal Option */}
+                  {(!isReadOnly || formData.status_nor === 'N') && (
+                    <div
+                      onClick={() => !isReadOnly && !isLockedBy && setFormData((prev: any) => ({ ...prev, status_nor: 'N' }))}
+                      className={`flex-1 cursor-pointer border-2 rounded-lg px-3 py-1.5 text-center transition-all ${formData.status_nor === 'N' ? 'bg-green-100 border-green-500 shadow-sm' : 'bg-white border-slate-200 hover:border-green-300'}`}>
+                      <span className={`font-black text-base ${formData.status_nor === 'N' ? 'text-green-700' : 'text-slate-400'}`}>N</span>
+                      <span className={`text-[9px] font-bold uppercase tracking-widest ml-1 ${formData.status_nor === 'N' ? 'text-green-800' : 'text-slate-500'}`}>Normal</span>
+                    </div>
+                  )}
+                  {/* Observe Option */}
+                  {(!isReadOnly || formData.status_nor === 'O') && (
+                    <div
+                      onClick={() => !isReadOnly && !isLockedBy && setFormData((prev: any) => ({ ...prev, status_nor: 'O' }))}
+                      className={`flex-1 cursor-pointer border-2 rounded-lg px-3 py-1.5 text-center transition-all ${formData.status_nor === 'O' ? 'bg-amber-100 border-amber-500 shadow-sm' : 'bg-white border-slate-200 hover:border-amber-300'}`}>
+                      <span className={`font-black text-base ${formData.status_nor === 'O' ? 'text-amber-700' : 'text-slate-400'}`}>O</span>
+                      <span className={`text-[9px] font-bold uppercase tracking-widest ml-1 ${formData.status_nor === 'O' ? 'text-amber-800' : 'text-slate-500'}`}>Observe</span>
+                    </div>
+                  )}
+                  {/* Referred Option */}
+                  {(!isReadOnly || formData.status_nor === 'R') && (
+                    <div
+                      onClick={() => !isReadOnly && !isLockedBy && setFormData((prev: any) => ({ ...prev, status_nor: 'R' }))}
+                      className={`flex-1 cursor-pointer border-2 rounded-lg px-3 py-1.5 text-center transition-all ${formData.status_nor === 'R' ? 'bg-red-100 border-red-500 shadow-sm' : 'bg-white border-slate-200 hover:border-red-300'}`}>
+                      <span className={`font-black text-base ${formData.status_nor === 'R' ? 'text-red-700' : 'text-slate-400'}`}>R</span>
+                      <span className={`text-[9px] font-bold uppercase tracking-widest ml-1 ${formData.status_nor === 'R' ? 'text-red-800' : 'text-slate-500'}`}>Referred</span>
+                    </div>
+                  )}
                 </div>
-                {!formData.status_nor && <p className="text-red-500 text-[10px] font-bold animate-pulse shrink-0">Required</p>}
+                {(!formData.status_nor && !isReadOnly) && <p className="text-red-500 text-[10px] font-bold animate-pulse shrink-0">Required</p>}
+                {(formData.status_nor && isReadOnly) && <div className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Official Diagnosis</div>}
               </div>
             </CardContent>
           </Card>

@@ -48,7 +48,7 @@ export function WorkspaceClient({
   schoolName: string;
   eventDate: Date;
   location: string;
-  eventStaff: { id: string; fullName: string; email: string; }[];
+  eventStaff: { id: string; fullName: string; email: string; department?: string }[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formConfig: any;
   currentUserId: string;
@@ -122,11 +122,11 @@ export function WorkspaceClient({
   };
 
   const STAT_CATEGORIES = [
-    { id: "ent", title: "ENT" },
-    { id: "dental", title: "Dental" },
-    { id: "optical", title: "Optical" },
-    { id: "skin", title: "Skin" },
-    { id: "communityMed", title: "Comm. Med" },
+    { id: "ent_examination", title: "ENT" },
+    { id: "dental_examination", title: "Dental" },
+    { id: "optical_examination", title: "Optical" },
+    { id: "skin_examination", title: "Skin" },
+    { id: "system_wise_examination", title: "Systemic" },
   ];
 
   const getReferredDepartments = (s: StudentData) => {

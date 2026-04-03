@@ -11,14 +11,14 @@ import { PocStudentCategoryGrid } from "@/components/poc/PocStudentCategoryGrid"
 import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 
 const CATEGORY_DEFINITIONS = [
-    { id: "demographics", title: "General Information", iconName: "FileText" },
-    { id: "communityMed", title: "Community Medicine", iconName: "Activity" },
-    // Hide other medical categories from the POC grid altogether, or keep them as readonly.
-    // We'll keep them as read-only for transparency as they were previously visible.
-    { id: "ent", title: "ENT Examination", iconName: "Ear" },
-    { id: "dental", title: "Dental", iconName: "Smile" },
-    { id: "optical", title: "Ophthalmology", iconName: "Eye" },
-    { id: "skin", title: "Dermatology", iconName: "Hand" },
+    { id: "general_examination_merged", title: "Demographics & Vitals", iconName: "FileText" },
+    { id: "vaccination_details", title: "Immunization Status", iconName: "Activity" },
+    { id: "symptoms", title: "Clinical Presentation & Symptoms", iconName: "AlertCircle" },
+    { id: "ent_examination", title: "ENT Examination", iconName: "Ear" },
+    { id: "dental_examination", title: "Dental Examination", iconName: "Smile" },
+    { id: "optical_examination", title: "Ophthalmology Examination", iconName: "Eye" },
+    { id: "skin_examination", title: "Dermatology Examination", iconName: "Hand" },
+    { id: "system_wise_examination", title: "Systemic Examination", iconName: "Activity" },
 ];
 
 export default async function PocStudentRecordMasterView(props: {
@@ -105,7 +105,8 @@ export default async function PocStudentRecordMasterView(props: {
 
         // POC read-only logic
         let catIsReadOnly = dynamicStatus === "PAST";
-        if ((cat.id !== 'communityMed' && cat.id !== 'demographics') || dynamicStatus !== 'UPCOMING') {
+        const isAssignedToPoc = ['general_examination_merged', 'vaccination_details', 'symptoms'].includes(cat.id);
+        if (!isAssignedToPoc || dynamicStatus !== 'UPCOMING') {
             catIsReadOnly = true;
         }
 
@@ -122,7 +123,7 @@ export default async function PocStudentRecordMasterView(props: {
         };
     });
 
-    const assignedCategoryIds = ["demographics", "communityMed"];
+    const assignedCategoryIds = ["general_examination_merged", "vaccination_details", "symptoms"];
     const completionPercentage = Math.round((completedCount / ALL_CATEGORY_DEFINITIONS.length) * 100);
     const globalStatus = student.medicalRecord?.status || "PENDING";
 
@@ -183,7 +184,7 @@ export default async function PocStudentRecordMasterView(props: {
                         <div>
                             <p className="text-emerald-900 font-bold text-sm uppercase tracking-wider mb-1">School Representative Access</p>
                             <p className="text-emerald-700 text-sm leading-relaxed">
-                                You are authorized to update <strong>General Information and Community Medicine</strong> details for this student.
+                                You are authorized to update <strong>Demographics & Vitals, Immunization Status, and Clinical Presentation</strong> details for this student.
                                 {dynamicStatus === "UPCOMING" ? (
                                     <span> Please complete all entries at least <strong>one day prior</strong> to the event.</span>
                                 ) : (

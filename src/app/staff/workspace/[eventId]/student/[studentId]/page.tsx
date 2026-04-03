@@ -10,12 +10,14 @@ import { StudentCategoryGrid } from "@/components/staff/StudentCategoryGrid";
 import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 
 const CATEGORY_DEFINITIONS = [
-  { id: "demographics", title: "General Information", iconName: "FileText" },
-  { id: "ent", title: "ENT Examination", iconName: "Ear" },
-  { id: "communityMed", title: "Community Medicine", iconName: "Activity" },
-  { id: "dental", title: "Dental", iconName: "Smile" },
-  { id: "optical", title: "Ophthalmology", iconName: "Eye" },
-  { id: "skin", title: "Dermatology", iconName: "Hand" },
+  { id: "general_examination_merged", title: "Demographics & Vitals", iconName: "FileText" },
+  { id: "vaccination_details", title: "Immunization Status", iconName: "Activity" },
+  { id: "ent_examination", title: "ENT Examination", iconName: "Ear" },
+  { id: "dental_examination", title: "Dental Examination", iconName: "Smile" },
+  { id: "optical_examination", title: "Ophthalmology Examination", iconName: "Eye" },
+  { id: "skin_examination", title: "Dermatology Examination", iconName: "Hand" },
+  { id: "system_wise_examination", title: "Systemic Examination", iconName: "Activity" },
+  { id: "symptoms", title: "Clinical Presentation & Symptoms", iconName: "AlertCircle" },
 ];
 
 export default async function StudentRecordMasterView(props: {
@@ -67,9 +69,9 @@ export default async function StudentRecordMasterView(props: {
   const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
 
   // Extract BMI data
-  const commMedData = recordData.communityMed || {};
-  const height = parseFloat(commMedData.height);
-  const weight = parseFloat(commMedData.weight);
+  const genExamData = recordData.general_examination_merged || {};
+  const height = parseFloat(genExamData.height);
+  const weight = parseFloat(genExamData.weight);
   let bmi = null;
   if (height && weight) {
     const heightInMeters = height / 100;
@@ -145,8 +147,8 @@ export default async function StudentRecordMasterView(props: {
   const isEventHead = (formConfig as any).eventHeadId === session?.user?.id;
 
   // Calculate assigned categories
-  const assignedCategoryIds = isAdmin || isEventHead
-    ? ALL_CATEGORY_DEFINITIONS.map(c => c.id) // Admins and Event Heads see all
+  const assignedCategoryIds = isAdmin
+    ? ALL_CATEGORY_DEFINITIONS.map(c => c.id) // Admins see all
     : ALL_CATEGORY_DEFINITIONS
       .filter(cat => (assignmentsByTag[cat.id] || []).includes(session?.user?.id || ""))
       .map(cat => cat.id);

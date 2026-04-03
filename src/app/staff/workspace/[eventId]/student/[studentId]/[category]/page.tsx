@@ -18,7 +18,17 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
   const customCategories = Array.isArray(formConfig.customCategories) ? formConfig.customCategories : [];
 
   // Verify valid category
-  const validCategories = ["demographics", "ent", "communityMed", "dental", "optical", "skin", ...customCategories.map((c: any) => c.id)];
+  const validCategories = [
+    "general_examination_merged",
+    "vaccination_details",
+    "ent_examination",
+    "dental_examination",
+    "optical_examination",
+    "skin_examination",
+    "system_wise_examination",
+    "symptoms",
+    ...customCategories.map((c: any) => c.id)
+  ];
   if (!validCategories.includes(category)) return notFound();
 
   // Fetch student and their medical record
@@ -60,11 +70,15 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
   const isAssignedDoctor = (sectionAssignments[category] || []).includes(currentUserId);
   const isEventHead = formConfig.eventHeadId === currentUserId;
 
-  let isSectionLockedForUser = !isAdmin && !isAssignedDoctor && !isEventHead;
+  let isSectionLockedForUser = !isAssignedDoctor;
   let readOnlyReason = "";
 
-  if (!isAdmin && !isAssignedDoctor && !isEventHead) {
-    readOnlyReason = "You are not assigned to this medical section. You can view the data but cannot make edits.";
+  if (!isAssignedDoctor) {
+    if (isAdmin || isEventHead) {
+      readOnlyReason = "You have not assigned yourself to this section. Even as an Admin/Head, you can only edit sections you are assigned to.";
+    } else {
+      readOnlyReason = "You are not assigned to this medical section. You can view the data but cannot make edits.";
+    }
   }
 
   const isReadOnly = dynamicStatus === "PAST" || isSectionLockedForUser || (dynamicStatus === "UPCOMING" && !isAdmin);

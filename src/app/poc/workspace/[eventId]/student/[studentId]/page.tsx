@@ -106,7 +106,7 @@ export default async function PocStudentRecordMasterView(props: {
         // POC read-only logic
         let catIsReadOnly = dynamicStatus === "PAST";
         const isAssignedToPoc = ['general_examination_merged', 'vaccination_details', 'symptoms'].includes(cat.id);
-        if (!isAssignedToPoc || dynamicStatus !== 'UPCOMING') {
+        if (!isAssignedToPoc || dynamicStatus === 'PAST') {
             catIsReadOnly = true;
         }
 
@@ -184,12 +184,12 @@ export default async function PocStudentRecordMasterView(props: {
                             <p className="text-emerald-900 font-bold text-sm uppercase tracking-wider mb-1">School Representative Access</p>
                             <p className="text-emerald-700 text-sm leading-relaxed">
                                 You are authorized to update <strong>Demographics & Vitals, Immunization Status, and Clinical Presentation</strong> details for this student.
-                                {dynamicStatus === "UPCOMING" ? (
-                                    <span> Please complete all entries at least <strong>one day prior</strong> to the event.</span>
+                                {dynamicStatus !== "PAST" ? (
+                                    <span> Please complete all entries for the event. Complete individual records as students arrive.</span>
                                 ) : (
                                     <span className="text-amber-700 font-bold italic block mt-1">
                                         <AlertCircle className="inline h-4 w-4 mr-1" />
-                                        Editing window is now closed.
+                                        The event has completed. Editing window is now closed.
                                     </span>
                                 )}
                             </p>

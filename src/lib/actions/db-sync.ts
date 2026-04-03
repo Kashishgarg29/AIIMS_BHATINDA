@@ -88,18 +88,9 @@ export async function saveMedicalCategory(
 
     // POC specific restrictions
     if (isPOC && !isAdmin) {
-      if (categoryName !== "communityMed" && categoryName !== "demographics") {
-        return { success: false, error: "Unauthorized: School representatives can only update General Information and Community Medicine details." };
-      }
-
-      if (categoryName === "communityMed") {
-        const allowedFields = ["height", "weight", "bloodGroup"];
-        const attemptingFields = Object.keys(categoryData).filter(k => !k.startsWith('_'));
-        const isAttemptingUnauthorized = attemptingFields.some(f => !allowedFields.includes(f));
-        
-        if (isAttemptingUnauthorized) {
-          return { success: false, error: "Unauthorized: School representatives can only update Height, Weight, and Blood Group in this section." };
-        }
+      const validPOC_Categories = ["general_examination_merged", "vaccination_details", "symptoms"];
+      if (!validPOC_Categories.includes(categoryName)) {
+        return { success: false, error: "Unauthorized: School representatives can only update Demographics, Immunization, and Symptoms details." };
       }
 
       const eventDate = new Date(event.eventDate);
@@ -107,8 +98,9 @@ export async function saveMedicalCategory(
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (today >= eventDate) {
-        return { success: false, error: "Deadline passed: School representatives can only update details until the day before the event."};
+      // POC can edit while it's upcoming (today < eventDate) or active (today == eventDate)
+      if (today > eventDate) {
+        return { success: false, error: "Deadline passed: School representatives can only update details until the event ends."};
       }
     }
 
@@ -158,8 +150,7 @@ export async function saveMedicalCategory(
 
     const overallStatus = completedCount === ALL_CATEGORIES.length ? "COMPLETED" : "IN_PROGRESS";
 
-    // 4. Update the database within a transaction
-    await prisma.$transaction([
+    const transactionOps: any[] = [
       prisma.medicalRecord.update({
         where: { id: record.id },
         data: {
@@ -171,12 +162,29 @@ export async function saveMedicalCategory(
       prisma.categoryAuditLog.create({
         data: {
           medicalRecordId: record.id,
-          userId: userId, // Requires an actual User in the DB matching this ID. For now we will mock it in the UI layer until populated.
+          userId: userId, 
           categoryName: categoryName,
           action: "SAVED"
         }
       })
-    ]);
+    ];
+
+    // If we're updating demographics, sync name changes back to the Student record
+    if (categoryName === "general_examination_merged") {
+       const { firstName, lastName } = categoryData;
+       if (firstName || lastName) {
+         const studentUpdates: any = {};
+         if (firstName) studentUpdates.firstName = firstName;
+         if (lastName) studentUpdates.lastName = lastName;
+         transactionOps.push(prisma.student.update({
+           where: { id: studentId },
+           data: studentUpdates
+         }));
+       }
+    }
+
+    // 4. Update the database within a transaction
+    await prisma.$transaction(transactionOps);
 
     // Revalidate the workspace pages to show the new data instantly
     revalidatePath(`/staff/workspace/${eventId}`);

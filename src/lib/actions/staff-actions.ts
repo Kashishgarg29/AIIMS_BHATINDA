@@ -13,6 +13,10 @@ export async function addStudentToEvent(data: {
   classSec: string;
   age: number;
   gender: "MALE" | "FEMALE" | "OTHER";
+  dob?: string;
+  height?: string;
+  weight?: string;
+  bloodGroup?: string;
 }) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,7 +33,7 @@ export async function addStudentToEvent(data: {
     const isAssigned = await prisma.eventStaff.findFirst({
       where: { eventId: data.eventId, userId: session.user.id }
     });
-    const isPOC = event.pocEmail === session.user.email;
+    const isPOC = event.pocEmail?.toLowerCase() === session.user.email?.toLowerCase();
 
     if (!isAdmin && !isAssigned && !isPOC) {
       throw new Error("Unauthorized: You are not assigned to this event");
@@ -42,8 +46,8 @@ export async function addStudentToEvent(data: {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (today >= eventDate) {
-        throw new Error("Deadline passed: School representatives can only add students until the day before the event.");
+      if (today > eventDate) {
+        throw new Error("Deadline passed: School representatives can only add students until the event ends.");
       }
     }
 
@@ -58,13 +62,25 @@ export async function addStudentToEvent(data: {
       }
     });
 
-    // Also initialize an empty medical record for the student
+    // Also initialize a medical record with demographic details
     await prisma.medicalRecord.create({
       data: {
         studentId: student.id,
         eventId: data.eventId,
         status: "PENDING",
-        data: {}
+        data: {
+          general_examination_merged: {
+            dob: data.dob || "",
+            age: data.age?.toString() || "",
+            sex: data.gender === "MALE" ? "Male" : data.gender === "FEMALE" ? "Female" : "Other",
+            classSection: data.classSec || "",
+            height: data.height || "",
+            weight: data.weight || "",
+            bloodGroup: data.bloodGroup || "",
+            _lastUpdated: new Date().toISOString(),
+            _managedBy: "System (Initial Import)"
+          }
+        }
       }
     });
 
@@ -86,6 +102,10 @@ export async function bulkAddStudentsToEvent(data: {
     classSec: string;
     age: number;
     gender: "MALE" | "FEMALE" | "OTHER";
+    dob?: string;
+    height?: string;
+    weight?: string;
+    bloodGroup?: string;
   }[];
 }) {
   try {
@@ -104,7 +124,7 @@ export async function bulkAddStudentsToEvent(data: {
     const isAssigned = await prisma.eventStaff.findFirst({
       where: { eventId, userId: session.user.id }
     });
-    const isPOC = event.pocEmail === session.user.email;
+    const isPOC = event.pocEmail?.toLowerCase() === session.user.email?.toLowerCase();
 
     if (!isAdmin && !isAssigned && !isPOC) {
       throw new Error("Unauthorized: You are not assigned to this event");
@@ -117,8 +137,8 @@ export async function bulkAddStudentsToEvent(data: {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (today >= eventDate) {
-        throw new Error("Deadline passed: School representatives can only add students until the day before the event.");
+      if (today > eventDate) {
+        throw new Error("Deadline passed: School representatives can only add students until the event ends.");
       }
     }
 
@@ -129,8 +149,8 @@ export async function bulkAddStudentsToEvent(data: {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (today >= eventDate) {
-        throw new Error("Deadline passed: School representatives can only add students until the day before the event.");
+      if (today > eventDate) {
+        throw new Error("Deadline passed: School representatives can only add students until the event ends.");
       }
     }
 
@@ -151,13 +171,28 @@ export async function bulkAddStudentsToEvent(data: {
         }))
       );
 
-      // 2. Create the associated medical records using the returned student IDs
-      const medicalRecordsData = createdStudents.map(student => ({
-        studentId: student.id,
-        eventId,
-        status: "PENDING" as const,
-        data: {}
-      }));
+      // 2. Create the associated medical records with demographic info
+      const medicalRecordsData = createdStudents.map((student, index) => {
+        const s = students[index];
+        return {
+          studentId: student.id,
+          eventId,
+          status: "PENDING" as const,
+          data: {
+            general_examination_merged: {
+              dob: s.dob || "",
+              age: s.age?.toString() || "",
+              sex: s.gender === "MALE" ? "Male" : s.gender === "FEMALE" ? "Female" : "Other",
+              classSection: s.classSec || "",
+              height: s.height || "",
+              weight: s.weight || "",
+              bloodGroup: s.bloodGroup || "",
+              _lastUpdated: new Date().toISOString(),
+              _managedBy: "System (Bulk Import)"
+            }
+          }
+        };
+      });
 
       await tx.medicalRecord.createMany({
         data: medicalRecordsData

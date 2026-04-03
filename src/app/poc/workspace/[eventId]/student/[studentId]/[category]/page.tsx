@@ -62,10 +62,10 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
     if (!validPOC_Categories.includes(category)) {
         isSectionLockedForUser = true;
         readOnlyReason = "School representatives can only edit the Demographics, Immunization, and Symptoms sections.";
-    } else if (dynamicStatus !== "UPCOMING") {
-        // For communityMed & demographics, POC can edit till day before the event
+    } else if (dynamicStatus === "PAST") {
+        // Locked if past, but allow edit for upcoming & active
         isSectionLockedForUser = true;
-        readOnlyReason = "The editing window for school representatives has closed (deadline was 1 day prior to the event).";
+        readOnlyReason = "This event has already passed. The medical record is frozen and cannot be edited.";
     }
 
     const isReadOnly = dynamicStatus === "PAST" || isSectionLockedForUser;

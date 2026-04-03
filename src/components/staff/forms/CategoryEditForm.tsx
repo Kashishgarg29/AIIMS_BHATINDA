@@ -108,6 +108,8 @@ export function CategoryEditFormClient({
   // Form State - Initialize with initialData and default "NO" for empty checkboxes
   const [formData, setFormData] = useState<Record<string, any>>(() => {
     const data = { ...(initialData || {}) };
+    if (!data.firstName && student?.firstName) data.firstName = student.firstName;
+    if (!data.lastName && student?.lastName) data.lastName = student.lastName;
     CHECKBOX_FIELDS.forEach(field => {
       if (data[field] === undefined) {
         data[field] = "NO";
@@ -187,6 +189,11 @@ export function CategoryEditFormClient({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFieldChange = (field: string, value: any) => {
     setFormData(prev => {
+      // Validation for 10-digit phone/mobile numbers
+      if (["mobile", "phone", "physicianContact"].includes(field)) {
+        if (value && value.toString().length > 10) return prev;
+      }
+
       const newData = { ...prev, [field]: value };
       
       // Age calculation
@@ -252,7 +259,7 @@ export function CategoryEditFormClient({
           const isYes = value === true || value === "YES";
           const isNo = value === false || value === "NO";
           const details = formData[`${fieldId}_details`];
-          
+
           if (isYes) {
             displayValue = (
               <div className="flex flex-col">
@@ -369,16 +376,26 @@ export function CategoryEditFormClient({
       let inputType = "text";
       if (DATE_FIELDS.includes(fieldId)) inputType = "date";
       if (NUMBER_FIELDS.includes(fieldId)) inputType = "number";
+      
+      // Use tel for phone numbers to improve mobile entry and validation
+      if (["mobile", "phone", "physicianContact"].includes(fieldId)) inputType = "tel";
 
       return (
         <div key={fieldId} className="space-y-2">
           <Label className="text-[11px] font-black uppercase text-slate-500">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
           <Input
             type={inputType}
+            maxLength={inputType === "tel" ? 10 : undefined}
+            pattern={inputType === "tel" ? "[0-9]{10}" : undefined}
             className="h-10 text-sm font-bold border-2 border-slate-200 focus:border-emerald-500 focus:ring-0 rounded-lg"
             value={formData[fieldId] || ""}
             onChange={e => handleFieldChange(fieldId, e.target.value)}
-            placeholder={`Enter ${label.toLowerCase()}`}
+            placeholder={`Enter ${label.toLowerCase()}${inputType === "tel" ? " (10 digits)" : ""}`}
+            onKeyPress={(e) => {
+              if (inputType === "tel" && !/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
           />
         </div>
       );
@@ -390,6 +407,8 @@ export function CategoryEditFormClient({
         id: "general_examination_merged",
         title: "Demographics & Vitals",
         fields: [
+          { id: "firstName", label: "First Name" },
+          { id: "lastName", label: "Last Name" },
           { id: "dob", label: "Date of Birth" },
           { id: "age", label: "Age" },
           { id: "sex", label: "Gender" },

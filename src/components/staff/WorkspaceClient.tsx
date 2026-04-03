@@ -71,6 +71,9 @@ export function WorkspaceClient({
   const [gender, setGender] = useState<"MALE" | "FEMALE" | "OTHER">("MALE");
   const [classSec, setClassSec] = useState("");
   const [dob, setDob] = useState("");
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingCSV, setIsUploadingCSV] = useState(false);
@@ -207,7 +210,11 @@ export function WorkspaceClient({
       lastName,
       classSec,
       gender,
-      age
+      age,
+      dob,
+      height,
+      weight,
+      bloodGroup
     });
 
     setIsAdding(false);
@@ -219,6 +226,9 @@ export function WorkspaceClient({
     setClassSec("");
     setDob("");
     setGender("MALE");
+    setHeight("");
+    setWeight("");
+    setBloodGroup("");
 
     router.refresh();
   }
@@ -250,11 +260,15 @@ export function WorkspaceClient({
             const mappedGender = gStr.startsWith('F') ? 'FEMALE' : gStr.startsWith('M') ? 'MALE' : 'OTHER';
 
             return {
-              firstName: row.firstName || row["First Name"] || "Unknown",
-              lastName: row.lastName || row["Last Name"] || "",
-              classSec: row.classSec || row["Class/Sec"] || row["Class"] || "Unknown",
+              firstName: row.firstName || row["First Name"] || row["first_name"] || "Unknown",
+              lastName: row.lastName || row["Last Name"] || row["last_name"] || "",
+              classSec: row.classSec || row["Class/Sec"] || row["Class"] || row["class"] || row["section"] || "Unknown",
               gender: mappedGender as "MALE" | "FEMALE" | "OTHER",
-              age: age || 5
+              age: age || 5,
+              dob: row.dob || row["Date of Birth"] || row["DOB"] || "",
+              height: row.height || row["Height"] || "",
+              weight: row.weight || row["Weight"] || "",
+              bloodGroup: row.bloodGroup || row["Blood Group"] || row["BloodGroup"] || ""
             };
           });
 
@@ -451,9 +465,29 @@ export function WorkspaceClient({
                           </div>
                         </div>
 
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="height">Height (cm)</Label>
+                            <Input id="height" type="number" placeholder="Optional" value={height} onChange={e => setHeight(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="weight">Weight (kg)</Label>
+                            <Input id="weight" type="number" placeholder="Optional" value={weight} onChange={e => setWeight(e.target.value)} />
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="classSec">Class & Section</Label>
-                          <Input id="classSec" placeholder="e.g. 10-A" required value={classSec} onChange={e => setClassSec(e.target.value)} />
+                          <Label htmlFor="bloodGroup">Blood Group</Label>
+                          <Select value={bloodGroup} onValueChange={(val) => setBloodGroup(val || "")}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select (Optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(bg => (
+                                <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isAdding}>

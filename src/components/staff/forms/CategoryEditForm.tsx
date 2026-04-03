@@ -122,23 +122,31 @@ export function CategoryEditFormClient({
     return data;
   });
 
-  // SYNC DATA WHEN CATEGORY OR INITIALDATA CHANGES (CRITICAL FOR EMBEDDED MODE)
+  const lastCategoryKey = useRef<string>("");
+
+  // SYNC DATA WHEN CATEGORY OR STUDENT CHANGES (CRITICAL FOR EMBEDDED MODE)
+  // We only sync initialData when the category or student actually changes to avoid overwriting current edits
   useEffect(() => {
-    setFormData(() => {
-      const data = { ...(initialData || {}) };
-      if (!data.firstName && student?.firstName) data.firstName = student.firstName;
-      if (!data.lastName && student?.lastName) data.lastName = student.lastName;
-      CHECKBOX_FIELDS.forEach(field => {
-        if (data[field] === undefined) {
-          data[field] = "NO";
-        }
+    const currentKey = `${studentId}_${category}`;
+    if (lastCategoryKey.current !== currentKey) {
+      setFormData(() => {
+        const data = { ...(initialData || {}) };
+        if (!data.firstName && student?.firstName) data.firstName = student.firstName;
+        if (!data.lastName && student?.lastName) data.lastName = student.lastName;
+        CHECKBOX_FIELDS.forEach(field => {
+          if (data[field] === undefined) {
+            data[field] = "NO";
+          }
+        });
+        return data;
       });
-      return data;
-    });
-    setError(null);
-    setIsLockedBy(null);
-    setHasTimedOut(false);
-  }, [category, initialData, student]);
+      lastCategoryKey.current = currentKey;
+      setError(null);
+      setIsLockedBy(null);
+      setHasTimedOut(false);
+      setIsSaved(false); // Reset saved status on new tab
+    }
+  }, [category, studentId, initialData, student]);
 
   // Track user activity
   useEffect(() => {

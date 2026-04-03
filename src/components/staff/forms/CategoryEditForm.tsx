@@ -55,8 +55,66 @@ export function CategoryEditFormClient({
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const lastActivityTime = useRef(Date.now());
 
-  // Form State - Initialize with initialData or empty defaults
-  const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
+  // Lists for identifying field types based on ID
+  const CHECKBOX_FIELDS = [
+    "jaundice", "allergies", "bloodTransfusion", "dentalImplant", "braces", "spectacles",
+    "typhoid", "earIssues", "noseIssues", "throatIssues", "mouthBreathing", "rottenTeeth",
+    "cavities", "gumCondition", "badBreath", "cannotSeeBoard", "rubsEyes", "usesSpectacles",
+    "skinCondition", "nailsHair", "whitePatches", "cracksMouth", "limpingGait", "abdomenIssues",
+    "breathlessness", "cardioIssues", "cnsIssues", "scratchesHead", "headache", "cannotSeeBoardSymptoms",
+    "pullsEars", "nailBiting", "frequentUrination", "diarrhoea", "vomiting", "stammering",
+    "bloodInStool", "faintingEpisodes"
+  ];
+
+  const DATE_FIELDS = [
+    "dob", "hepB1", "hepB2", "hepB3", "typhoidDate", "dptPolio", "tetanus"
+  ];
+
+  const NUMBER_FIELDS = [
+    "age", "pinCode", "phone", "mobile", "physicianContact", "height", "weight"
+  ];
+
+  const SELECT_FIELDS: Record<string, { label: string, value: string }[]> = {
+    sex: [
+      { label: "Male", value: "Male" },
+      { label: "Female", value: "Female" },
+      { label: "Other", value: "Other" }
+    ],
+    bloodGroup: [
+      { label: "A+", value: "A+" }, { label: "A-", value: "A-" },
+      { label: "B+", value: "B+" }, { label: "B-", value: "B-" },
+      { label: "O+", value: "O+" }, { label: "O-", value: "O-" },
+      { label: "AB+", value: "AB+" }, { label: "AB-", value: "AB-" },
+    ],
+    anaemia: [
+      { label: "Normal", value: "Normal" },
+      { label: "Mild", value: "Mild" },
+      { label: "Severe", value: "Severe" }
+    ]
+  };
+
+  const TEXTAREA_FIELDS = [
+    "address", "majorIllness", "generalRemarks", "earRemarks", "noseRemarks", "throatRemarks", "mouthRemarks",
+    "entRemarks", "dentalRemarks", "eyeRemarks", "skinRemarks", "systemRemarks", "presentComplaint",
+    "currentMedication", "otherInfo", "doctorRemarks"
+  ];
+
+  const FIELDS_WITH_DETAILS = [
+    "allergies", "majorIllness", "earIssues", "noseIssues", "throatIssues",
+    "skinCondition", "nailsHair", "anyOtherProblem"
+  ];
+
+
+  // Form State - Initialize with initialData and default "NO" for empty checkboxes
+  const [formData, setFormData] = useState<Record<string, any>>(() => {
+    const data = { ...(initialData || {}) };
+    CHECKBOX_FIELDS.forEach(field => {
+      if (data[field] === undefined) {
+        data[field] = "NO";
+      }
+    });
+    return data;
+  });
 
   // Track user activity
   useEffect(() => {
@@ -128,7 +186,24 @@ export function CategoryEditFormClient({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFieldChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Age calculation
+      if (field === "dob" && value) {
+        try {
+          const birthDate = new Date(value);
+          const today = new Date();
+          let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            calculatedAge--;
+          }
+          if (calculatedAge >= 0) newData.age = calculatedAge.toString();
+        } catch (e) { /* ignore */ }
+      }
+      return newData;
+    });
   };
 
   const req = (id: string) => requiredFields.includes(id) && <span className="text-red-500 ml-1" title="Required">*</span>;
@@ -168,52 +243,148 @@ export function CategoryEditFormClient({
     const renderField = (fieldId: string, label: string) => {
       const isRequired = requiredFields.includes(fieldId);
       const value = formData[fieldId];
-      const isFieldReadOnly = isReadOnly || isLockedBy;
+      const isFieldReadOnly = isReadOnly || isLockedBy || hasTimedOut;
 
       // READ-ONLY VIEW: Show as an inline "Label: Value" entry
       if (isFieldReadOnly) {
+        let displayValue = (value === undefined || value === "") ? "Not Recorded" : value;
+        if (CHECKBOX_FIELDS.includes(fieldId)) {
+          const isYes = value === true || value === "YES";
+          const isNo = value === false || value === "NO";
+          const details = formData[`${fieldId}_details`];
+          
+          if (isYes) {
+            displayValue = (
+              <div className="flex flex-col">
+                <span className="text-emerald-700 font-extrabold">YES</span>
+                {(FIELDS_WITH_DETAILS.includes(fieldId) && details) && (
+                  <div className="text-[12px] text-slate-600 font-medium italic mt-1 bg-white p-2 rounded-md border border-emerald-100 shadow-sm leading-snug">
+                    {details}
+                  </div>
+                )}
+              </div>
+            );
+          } else if (isNo) {
+            displayValue = <span className="text-red-500 font-extrabold uppercase">NO</span>;
+          } else {
+            displayValue = <span className="text-slate-300 italic">Not Recorded</span>;
+          }
+        } else if (typeof value === 'boolean') {
+          displayValue = value ? "Yes" : "No";
+        }
+
         return (
-          <div key={fieldId} className={`flex items-baseline gap-2 py-1.5 border-b border-slate-100 last:border-0 ${(fieldId === "doctorRemarks" || fieldId === "presentComplaint" || fieldId === "otherInfo" || fieldId === "address" || fieldId === "anyOtherSymptoms") ? "md:col-span-2" : ""}`}>
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-tight shrink-0 min-w-[140px]">
+          <div key={fieldId} className={`flex items-baseline gap-2 py-2 border-b border-slate-50 last:border-0 ${TEXTAREA_FIELDS.includes(fieldId) ? "md:col-span-2" : ""}`}>
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider shrink-0 min-w-[150px]">
               {label}{isRequired && <span className="text-red-500 ml-0.5">*</span>}:
             </span>
-            <span className={`text-sm ${value ? 'text-slate-900 font-black' : 'text-slate-300 italic font-medium'}`}>
-              {value || "Not Recorded"}
-            </span>
+            <div className="flex-1 text-sm font-bold text-slate-800">
+              {displayValue}
+            </div>
           </div>
         );
       }
 
-      // EDITABLE VIEW: Standard form controls
-      if (fieldId === "doctorRemarks" || fieldId === "presentComplaint" || fieldId === "otherInfo" || fieldId === "address" || fieldId === "anyOtherSymptoms") {
+      // EDITABLE VIEW
+
+      // 1. YES / NO Buttons with Details
+      if (CHECKBOX_FIELDS.includes(fieldId)) {
+        const isYes = formData[fieldId] === "YES" || formData[fieldId] === true;
+        const isNo = formData[fieldId] === "NO" || formData[fieldId] === false;
+        const hasDetailsBox = FIELDS_WITH_DETAILS.includes(fieldId);
+        const detailsKey = `${fieldId}_details`;
+
         return (
-          <div key={fieldId} className="space-y-1.5 md:col-span-2">
-            <Label className="text-xs font-bold text-slate-700">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
+          <div key={fieldId} className="flex flex-col p-3 bg-slate-50 border border-slate-100 rounded-xl md:col-span-1 shadow-sm transition-all hover:border-emerald-100">
+            <div className="flex items-center justify-between gap-4">
+              <Label className="text-[11px] font-black uppercase text-slate-600 tracking-tight leading-snug">
+                {label} {isRequired && <span className="text-red-500">*</span>}
+              </Label>
+              <div className="flex border-2 border-slate-200 rounded-lg overflow-hidden h-9 bg-white shadow-sm shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleFieldChange(fieldId, "YES")}
+                  className={`px-5 text-[11px] font-black transition-all ${isYes ? 'bg-emerald-600 text-white shadow-inner translate-y-[1px]' : 'bg-white text-slate-400 hover:bg-slate-50'}`}>
+                  YES
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFieldChange(fieldId, "NO")}
+                  className={`px-5 text-[11px] font-black border-l border-slate-200 transition-all ${isNo ? 'bg-red-500 text-white shadow-inner translate-y-[1px]' : 'bg-white text-slate-400 hover:bg-slate-50'}`}>
+                  NO
+                </button>
+              </div>
+            </div>
+
+            {(isYes && hasDetailsBox) && (
+              <div className="mt-3 animate-in slide-in-from-top-2 duration-300">
+                <p className="text-[9px] font-black text-emerald-600 uppercase mb-2 tracking-widest pl-1">Clinical Observations / Remarks:</p>
+                <Textarea
+                  placeholder={`Mention specific ${label.toLowerCase()} details...`}
+                  className="text-sm min-h-[70px] bg-white border-2 border-emerald-100 focus:border-emerald-400 ring-0 shadow-inner rounded-lg font-medium"
+                  value={formData[detailsKey] || ""}
+                  onChange={(e) => handleFieldChange(detailsKey, e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // 2. Dropdown
+      if (SELECT_FIELDS[fieldId]) {
+        return (
+          <div key={fieldId} className="space-y-2">
+            <Label className="text-[11px] font-black uppercase text-slate-500">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
+            <Select value={value || ""} onValueChange={(val) => handleFieldChange(fieldId, val)}>
+              <SelectTrigger className="h-10 text-sm font-bold border-2 focus:ring-2 focus:ring-emerald-500">
+                <SelectValue placeholder={`Select ${label}...`} />
+              </SelectTrigger>
+              <SelectContent>
+                {SELECT_FIELDS[fieldId].map(opt => (
+                  <SelectItem key={opt.value} value={opt.value} className="font-bold">{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      }
+
+      // 3. Textarea
+      if (TEXTAREA_FIELDS.includes(fieldId)) {
+        return (
+          <div key={fieldId} className="space-y-2 md:col-span-2">
+            <Label className="text-[11px] font-black uppercase text-slate-500">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
             <Textarea
-              className="text-sm min-h-[80px]"
+              className="text-sm min-h-[100px] border-2 border-slate-200 focus:border-emerald-500 focus:ring-0 rounded-xl font-medium"
               value={formData[fieldId] || ""}
               onChange={e => handleFieldChange(fieldId, e.target.value)}
-              placeholder={`Enter ${label.toLowerCase()}...`}
+              placeholder={`Write detailed ${label.toLowerCase()} here...`}
             />
           </div>
         );
       }
 
-      // Default to standard Input
+      // 4. Inputs (Date / Number / Text)
+      let inputType = "text";
+      if (DATE_FIELDS.includes(fieldId)) inputType = "date";
+      if (NUMBER_FIELDS.includes(fieldId)) inputType = "number";
+
       return (
-        <div key={fieldId} className="space-y-1.5">
-          <Label className="text-xs font-bold text-slate-700">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
+        <div key={fieldId} className="space-y-2">
+          <Label className="text-[11px] font-black uppercase text-slate-500">{label} {isRequired && <span className="text-red-500">*</span>}</Label>
           <Input
-            className="h-9 text-sm"
+            type={inputType}
+            className="h-10 text-sm font-bold border-2 border-slate-200 focus:border-emerald-500 focus:ring-0 rounded-lg"
             value={formData[fieldId] || ""}
             onChange={e => handleFieldChange(fieldId, e.target.value)}
-            placeholder={`Enter ${label.toLowerCase()}...`}
+            placeholder={`Enter ${label.toLowerCase()}`}
           />
         </div>
       );
     };
 
-    // Find the category definition from our list of 8
+    // Reference definitions
     const CATEGORIES_REF = [
       {
         id: "general_examination_merged",
@@ -221,30 +392,31 @@ export function CategoryEditFormClient({
         fields: [
           { id: "dob", label: "Date of Birth" },
           { id: "age", label: "Age" },
-          { id: "sex", label: "Sex" },
+          { id: "sex", label: "Gender" },
+          { id: "classSection", label: "Class / Section" },
           { id: "bloodGroup", label: "Blood Group" },
           { id: "fatherName", label: "Father's Name" },
           { id: "fatherOccupation", label: "Father's Occupation" },
           { id: "motherName", label: "Mother's Name" },
           { id: "motherOccupation", label: "Mother's Occupation" },
-          { id: "address", label: "Address" },
+          { id: "address", label: "Full Address" },
           { id: "pinCode", label: "Pin Code" },
-          { id: "phone", label: "Phone" },
+          { id: "phone", label: "Phone (Home)" },
           { id: "mobile", label: "Mobile" },
           { id: "familyPhysicianName", label: "Family Physician Name" },
           { id: "physicianContact", label: "Physician Contact" },
-          { id: "jaundice", label: "Jaundice" },
-          { id: "allergies", label: "Allergies" },
-          { id: "bloodTransfusion", label: "Blood Transfusion" },
+          { id: "jaundice", label: "History of Jaundice" },
+          { id: "allergies", label: "Known Allergies" },
+          { id: "bloodTransfusion", label: "Blood Transfusion History" },
           { id: "majorIllness", label: "Any major illness/operation" },
           { id: "dentalImplant", label: "Dental Implant" },
-          { id: "braces", label: "Braces" },
-          { id: "spectaclesRight", label: "Spectacles / Lens (Right Eye)" },
-          { id: "spectaclesLeft", label: "Spectacles / Lens (Left Eye)" },
+          { id: "braces", label: "Dental Braces" },
+          { id: "spectaclesRight", label: "Spectacles (Right Power)" },
+          { id: "spectaclesLeft", label: "Spectacles (Left Power)" },
           { id: "height", label: "Height (cm)" },
           { id: "weight", label: "Weight (kg)" },
-          { id: "anaemia", label: "Anaemia" },
-          { id: "systemicExam", label: "Systemic Examination" },
+          { id: "anaemia", label: "Anaemia Assessment" },
+          { id: "systemicExam", label: "General Remarks" },
         ],
       },
       {

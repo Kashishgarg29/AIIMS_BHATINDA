@@ -31,6 +31,8 @@ export function CategoryEditFormClient({
   isPOC = false,
   basePath,
   userRole,
+  isEmbedded = false,
+  onClose,
 }: {
   eventId: string,
   studentId: string,
@@ -46,6 +48,8 @@ export function CategoryEditFormClient({
   isPOC?: boolean,
   basePath?: string,
   userRole?: string,
+  isEmbedded?: boolean,
+  onClose?: () => void,
 }) {
   const router = useRouter();
 
@@ -118,6 +122,24 @@ export function CategoryEditFormClient({
     return data;
   });
 
+  // SYNC DATA WHEN CATEGORY OR INITIALDATA CHANGES (CRITICAL FOR EMBEDDED MODE)
+  useEffect(() => {
+    setFormData(() => {
+      const data = { ...(initialData || {}) };
+      if (!data.firstName && student?.firstName) data.firstName = student.firstName;
+      if (!data.lastName && student?.lastName) data.lastName = student.lastName;
+      CHECKBOX_FIELDS.forEach(field => {
+        if (data[field] === undefined) {
+          data[field] = "NO";
+        }
+      });
+      return data;
+    });
+    setError(null);
+    setIsLockedBy(null);
+    setHasTimedOut(false);
+  }, [category, initialData, student]);
+
   // Track user activity
   useEffect(() => {
     if (isReadOnly || hasTimedOut) return;
@@ -188,6 +210,7 @@ export function CategoryEditFormClient({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFieldChange = (field: string, value: any) => {
+    if (isSaved) setIsSaved(false);
     setFormData(prev => {
       // Validation for 10-digit phone/mobile numbers
       if (["mobile", "phone", "physicianContact"].includes(field)) {
@@ -195,7 +218,7 @@ export function CategoryEditFormClient({
       }
 
       const newData = { ...prev, [field]: value };
-      
+
       // Age calculation
       if (field === "dob" && value) {
         try {
@@ -231,8 +254,14 @@ export function CategoryEditFormClient({
     if (!isReadOnly && !hasTimedOut) {
       await releaseLock(studentId, eventId, category, userId);
     }
-    router.push(`${basePath || '/staff'}/workspace/${eventId}/student/${studentId}`);
+    if (onClose) {
+      onClose();
+    } else {
+      router.push(`${basePath || '/staff'}/workspace/${eventId}/student/${studentId}`);
+    }
   };
+
+  const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -248,10 +277,20 @@ export function CategoryEditFormClient({
     setIsSaving(false);
 
     if (result.success) {
+      setIsSaved(true);
       if (!isReadOnly && !isLockedBy && !hasTimedOut) {
         await releaseLock(studentId, eventId, category, userId);
       }
-      router.push(`${basePath || '/staff'}/workspace/${eventId}/student/${studentId}`);
+
+      // If standalone, we still navigate away after a slight delay or immediately
+      if (!isEmbedded) {
+        setTimeout(() => {
+          if (onClose) onClose();
+          else router.push(`${basePath || '/staff'}/workspace/${eventId}/student/${studentId}`);
+        }, 1500);
+      } else {
+        router.refresh();
+      }
     } else {
       setError(result.error || "Failed to save category");
     }
@@ -388,7 +427,7 @@ export function CategoryEditFormClient({
       let inputType = "text";
       if (DATE_FIELDS.includes(fieldId)) inputType = "date";
       if (NUMBER_FIELDS.includes(fieldId)) inputType = "number";
-      
+
       // Use tel for phone numbers to improve mobile entry and validation
       if (["mobile", "phone", "physicianContact"].includes(fieldId)) inputType = "tel";
 
@@ -608,7 +647,8 @@ export function CategoryEditFormClient({
   };
 
   return (
-    <div className="flex flex-col pb-24">
+    <div className={`flex flex-col ${isEmbedded ? '' : 'min-h-screen bg-slate-50 pb-12 pt-16'}`}>
+      {!isEmbedded && <Navbar />}
 
       {/* Category Editor Header */}
       <div className="bg-white border-b shrink-0 z-20 shadow-sm sticky top-0">
@@ -663,7 +703,7 @@ export function CategoryEditFormClient({
         </div>
       </div>
 
-      <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-5 lg:p-6 overflow-y-auto pb-24">
+      <main className={`flex-1 w-full max-w-4xl mx-auto ${isEmbedded ? 'p-0' : 'p-3 sm:p-5 lg:p-6'} overflow-y-auto pb-24`}>
         {initialData?._managedBy && initialData._managedBy !== userName && (
           <Alert className="mb-4 border-amber-300 bg-amber-50 shadow-sm">
             <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -713,11 +753,11 @@ export function CategoryEditFormClient({
         )}
 
         <Card className="shadow-sm border-slate-200 relative mb-6">
-          {(isReadOnly || isLockedBy || hasTimedOut) && (
-            <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Read Only / Locked" />
+          {(isLockedBy || hasTimedOut) && (
+            <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
           )}
           <CardContent className="p-3">
-            <fieldset disabled={isReadOnly || !!isLockedBy || hasTimedOut}>
+            <fieldset disabled={!!isLockedBy || hasTimedOut}>
               {renderFormContent()}
             </fieldset>
           </CardContent>
@@ -725,13 +765,15 @@ export function CategoryEditFormClient({
 
         {category !== "general_examination_merged" && (
           <Card className="shadow-sm border-slate-200 relative mb-6">
-            {(isReadOnly || isLockedBy || hasTimedOut) && (
-              <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Read Only / Locked" />
+            {(isLockedBy || hasTimedOut) && (
+              <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
             )}
             <CardContent className="px-4 py-3 bg-slate-50 border-t-2 border-slate-700 rounded-b-xl">
               <div className="flex items-center gap-3">
                 <Label className="text-xs font-black tracking-wide uppercase text-slate-700 shrink-0">Assessment <span className="text-red-500">*</span></Label>
-                <div className="flex gap-2 flex-1">
+                <div className="flex gap-2 flex-1 relative">
+                  {/* Lock overlay for Assessment buttons if locked/timed out */}
+                  {isReadOnly && <div className="absolute inset-0 z-10 cursor-default" />}
                   {/* Normal Option */}
                   {(!isReadOnly || formData.status_nor === 'N') && (
                     <div
@@ -770,23 +812,21 @@ export function CategoryEditFormClient({
 
       {/* Floating Save Action Bar */}
       {(!isReadOnly && !isLockedBy) && (
-        <div className="fixed bottom-0 left-0 w-full bg-white border-t p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+        <div className={`${isEmbedded ? 'sticky bottom-0 rounded-b-2xl' : 'fixed bottom-0 left-0'} w-full bg-white border-t p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20`}>
           <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <div className="text-sm text-slate-500 flex items-center gap-2">
-              <FileCheck className="h-4 w-4" /> Editing
+            <div className={`hidden sm:flex text-sm text-slate-500 items-center gap-2`}>
+              <FileCheck className="h-4 w-4" /> Editing {category.replace(/([A-Z])/g, ' $1').trim()}
             </div>
-            <div className="flex items-center gap-3">
-              {initialData?._managedBy && (
-                <div className="text-xs text-slate-500 mr-2 border-r border-slate-200 pr-4">
-                  <span className="font-semibold">Last Saved By:</span>{" "}
-                  {/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(initialData._managedBy)
-                    ? "Staff Member"
-                    : initialData._managedBy}
-                </div>
-              )}
-              <Button onClick={handleExit} variant="outline">Cancel</Button>
-              <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
-                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : <><Save className="mr-2 h-4 w-4" /> Save Category</>}
+            <div className="flex items-center gap-3 ml-auto">
+              {!isEmbedded && <Button onClick={handleExit} variant="outline">Cancel</Button>}
+              <Button onClick={handleSave} disabled={isSaving} className={`transition-all font-black uppercase text-xs tracking-widest px-8 ${isSaved ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-slate-900'}`}>
+                {isSaving ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin text-white" /> Saving...</>
+                ) : isSaved ? (
+                  <><FileCheck className="mr-2 h-4 w-4 text-white" /> Edit Category</>
+                ) : (
+                  <><Save className="mr-2 h-4 w-4 text-white" /> Save Category</>
+                )}
               </Button>
             </div>
           </div>

@@ -11,9 +11,9 @@ import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 
 const CATEGORY_DEFINITIONS = [
   { id: "general_examination_merged", title: "Demographics & Vitals", iconName: "FileText" },
-  { id: "vaccination_details", title: "Immunization Status", iconName: "Activity" },
+  { id: "vaccination_details", title: "Immunization Status", iconName: "Syringe" },
   { id: "ent_examination", title: "ENT Examination", iconName: "Ear" },
-  { id: "dental_examination", title: "Dental Examination", iconName: "Smile" },
+  { id: "dental_examination", title: "Dental Examination", iconName: "Tooth" },
   { id: "optical_examination", title: "Ophthalmology Examination", iconName: "Eye" },
   { id: "skin_examination", title: "Dermatology Examination", iconName: "Hand" },
   { id: "system_wise_examination", title: "Systemic Examination", iconName: "Activity" },
@@ -159,62 +159,23 @@ export default async function StudentRecordMasterView(props: {
   return (
     <div className="flex flex-col">
       <RealTimeRefresher />
-
-      {/* Student Sticky Header */}
-      <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Link href={backTo}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-emerald-600 transition-all shadow-sm">
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <span className="text-[10px] uppercase font-black tracking-widest text-emerald-600/60">Patient View</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-extrabold text-slate-900 leading-tight tracking-tight">{student.firstName} {student.lastName}</h1>
-                <Badge variant="outline" className={
-                  globalStatus === "COMPLETED" ? "bg-green-50 text-green-700 border-green-200" :
-                    globalStatus === "IN_PROGRESS" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                      "bg-slate-100 text-slate-700 border-slate-200"
-                }>
-                  {globalStatus.replace('_', ' ')}
-                </Badge>
-              </div>
-              <p className="text-sm font-bold text-slate-500 mt-2 flex flex-wrap gap-4 uppercase tracking-tight">
-                <span className="flex items-center gap-1.5"><span className="opacity-40">Class:</span> {student.classSec}</span>
-                <span className="flex items-center gap-1.5"><span className="opacity-40">Age:</span> {student.age}</span>
-                <span className="flex items-center gap-1.5 text-emerald-600">
-                  <span className="opacity-60 text-slate-500">BMI:</span> {bmi || 'NA'}
-                </span>
-              </p>
-            </div>
-
-            <div className="w-full md:w-1/3">
-              <div className="flex justify-between text-[11px] font-black text-slate-500 mb-1.5 uppercase tracking-widest">
-                <span>Completion Status</span>
-                <span>{completionPercentage}%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden shadow-inner">
-                <div className={`h-2.5 rounded-full transition-all duration-700 ease-out ${completionPercentage === 100 ? 'bg-green-500' : 'bg-emerald-500'}`} style={{ width: `${completionPercentage}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <main className="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-
-        <StudentCategoryGrid
+      <StudentCategoryGrid
           categoriesStatus={categoriesStatus}
           assignedCategoryIds={assignedCategoryIds}
           eventId={eventId}
           studentId={studentId}
+          student={student}
+          backTo={backTo}
+          completionPercentage={completionPercentage}
+          globalStatus={globalStatus}
+          dynamicStatus={dynamicStatus}
+          bmi={bmi}
           isUpcoming={dynamicStatus === "UPCOMING" && !isAdmin}
-        />
-      </main>
+          userId={session?.user?.id || ""}
+          userName={session?.user?.name || "Medical Staff"}
+          userRole={session?.user?.role}
+          formConfig={formConfig}
+      />
     </div>
   );
 }

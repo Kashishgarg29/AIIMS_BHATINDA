@@ -12,10 +12,10 @@ import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 
 const CATEGORY_DEFINITIONS = [
     { id: "general_examination_merged", title: "Demographics & Vitals", iconName: "FileText" },
-    { id: "vaccination_details", title: "Immunization Status", iconName: "Activity" },
+    { id: "vaccination_details", title: "Immunization Status", iconName: "Syringe" },
     { id: "symptoms", title: "Clinical Presentation & Symptoms", iconName: "AlertCircle" },
     { id: "ent_examination", title: "ENT Examination", iconName: "Ear" },
-    { id: "dental_examination", title: "Dental Examination", iconName: "Smile" },
+    { id: "dental_examination", title: "Dental Examination", iconName: "Tooth" },
     { id: "optical_examination", title: "Ophthalmology Examination", iconName: "Eye" },
     { id: "skin_examination", title: "Dermatology Examination", iconName: "Hand" },
     { id: "system_wise_examination", title: "Systemic Examination", iconName: "Activity" },
@@ -134,13 +134,18 @@ export default async function PocStudentRecordMasterView(props: {
         };
     });
 
-    const assignedCategoryIds = ["general_examination_merged", "vaccination_details", "symptoms"];
+    const isEventHead = (formConfig as any).eventHeadId === session?.user?.id;
+    const isAdmin = session?.user?.role === "ADMIN";
+    const assignedCategoryIds = (isAdmin || isEventHead)
+        ? ALL_CATEGORY_DEFINITIONS.map(c => c.id)
+        : ["general_examination_merged", "vaccination_details", "symptoms"];
     const completionPercentage = Math.round((completedCount / ALL_CATEGORY_DEFINITIONS.length) * 100);
     const globalStatus = student.medicalRecord?.status || "PENDING";
 
     return (
         <>
             <RealTimeRefresher />
+<<<<<<< HEAD
 
             <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -218,6 +223,22 @@ export default async function PocStudentRecordMasterView(props: {
                     studentId={studentId}
                 />
             </main>
+=======
+            <PocStudentCategoryGrid
+                categoriesStatus={categoriesStatus}
+                assignedCategoryIds={assignedCategoryIds}
+                eventId={eventId}
+                studentId={studentId}
+                student={student}
+                backTo={backTo}
+                completionPercentage={completionPercentage}
+                globalStatus={globalStatus}
+                dynamicStatus={dynamicStatus}
+                userId={session?.user?.id || ""}
+                userName={session?.user?.name || "School POC"}
+                formConfig={formConfig}
+            />
+>>>>>>> d47ba5f ( last edited by prerna)
         </>
     );
 }

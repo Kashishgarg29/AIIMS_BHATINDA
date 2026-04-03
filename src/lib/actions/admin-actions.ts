@@ -108,7 +108,7 @@ export async function acceptCampRequest(
 
     let newEventId = "";
     // 2. Create Event and Assign Staff in a single transaction with a longer timeout (15s)
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Create the Event
       const newEvent = await tx.event.create({
         data: {
@@ -210,7 +210,7 @@ export async function createEvent(
     const pocPassword = generateRandomPassword();
     const pocPasswordHash = await bcryptjs.hash(pocPassword, 10);
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       const newEvent = await tx.event.create({
         data: {
           schoolDetails: data.schoolDetails,
@@ -401,7 +401,7 @@ export async function checkStaffDeletion(userId: string) {
 // Soft Delete Medical Staff and unassign from upcoming events
 export async function deleteMedicalStaff(userId: string) {
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Remove from all UPCOMING or ACTIVE events
       const upcomingEvents = await tx.event.findMany({
         where: {
@@ -411,7 +411,7 @@ export async function deleteMedicalStaff(userId: string) {
         select: { id: true }
       });
 
-      const upcomingEventIds = upcomingEvents.map(e => e.id);
+      const upcomingEventIds = upcomingEvents.map((e: any) => e.id);
 
       if (upcomingEventIds.length > 0) {
         await tx.eventStaff.deleteMany({

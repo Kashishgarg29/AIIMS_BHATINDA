@@ -260,9 +260,9 @@ export function WorkspaceClient({
             const mappedGender = gStr.startsWith('F') ? 'FEMALE' : gStr.startsWith('M') ? 'MALE' : 'OTHER';
 
             return {
-              firstName: row.firstName || row["First Name"] || row["first_name"] || "Unknown",
-              lastName: row.lastName || row["Last Name"] || row["last_name"] || "",
-              classSec: row.classSec || row["Class/Sec"] || row["Class"] || row["class"] || row["section"] || "Unknown",
+              firstName: row.firstName || row["First Name"] || row["first_name"] || row["FirstName"] || "Unknown",
+              lastName: row.lastName || row["Last Name"] || row["last_name"] || row["LastName"] || "",
+              classSec: row.classSec || row["Class/Sec"] || row["Class & Section"] || row["Class-Section"] || row["Class"] || row["class"] || row["section"] || "Unknown",
               gender: mappedGender as "MALE" | "FEMALE" | "OTHER",
               age: age || 5,
               dob: row.dob || row["Date of Birth"] || row["DOB"] || "",
@@ -379,126 +379,120 @@ export function WorkspaceClient({
                 className="pl-10 w-full bg-white shadow-sm"
               />
             </div>
+            {/* Student addition restricted to Active/Upcoming events */}
+            {dynamicStatus !== "PAST" && (
+              <div className="flex ml-auto gap-2 w-full sm:w-auto">
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleCSVUpload}
+                />
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingCSV}
+                >
+                  {isUploadingCSV ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                  {isUploadingCSV ? "Uploading..." : "CSV Upload"}
+                </Button>
 
-            {/* Deadline Logic for POC */}
-            {(() => {
-              const eventDay = new Date(eventDate);
-              eventDay.setHours(0, 0, 0, 0);
-              const now = new Date();
-              now.setHours(0, 0, 0, 0);
-
-              const canAdd = dynamicStatus !== "PAST";
-
-              if (!canAdd) return null;
-
-              return (
-                <div className="flex ml-auto gap-2 w-full sm:w-auto">
-                  <input
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleCSVUpload}
+                {formConfig?.eventHeadId === currentUserId && (
+                  <ManageSectionsDialog
+                    eventId={eventId}
+                    formConfig={formConfig}
+                    eventStaff={eventStaff}
                   />
-                  <Button
-                    variant="outline"
-                    className="flex-1 sm:flex-none"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingCSV}
-                  >
-                    {isUploadingCSV ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
-                    {isUploadingCSV ? "Uploading..." : "CSV Upload"}
-                  </Button>
+                )}
 
-                  {formConfig?.eventHeadId === currentUserId && (
-                    <ManageSectionsDialog
-                      eventId={eventId}
-                      formConfig={formConfig}
-                      eventStaff={eventStaff}
-                    />
-                  )}
-
-                  <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                    <DialogTrigger
-                      render={
-                        <Button className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700">
-                          <UserPlus className="mr-2 h-4 w-4" /> Quick Add
-                        </Button>
-                      }
-                    />
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Add New Student</DialogTitle>
-                        <DialogDescription>
-                          Add a student manually to the roster. They will immediately appear in the list.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleAddStudent} className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name</Label>
-                            <Input id="firstName" required value={firstName} onChange={e => setFirstName(e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name</Label>
-                            <Input id="lastName" required value={lastName} onChange={e => setLastName(e.target.value)} />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="dob">Date of Birth</Label>
-                            <Input id="dob" type="date" required value={dob} onChange={e => setDob(e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="gender">Gender</Label>
-                            <Select required value={gender} onValueChange={(val: any) => setGender(val)}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="MALE">Male</SelectItem>
-                                <SelectItem value="FEMALE">Female</SelectItem>
-                                <SelectItem value="OTHER">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="height">Height (cm)</Label>
-                            <Input id="height" type="number" placeholder="Optional" value={height} onChange={e => setHeight(e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="weight">Weight (kg)</Label>
-                            <Input id="weight" type="number" placeholder="Optional" value={weight} onChange={e => setWeight(e.target.value)} />
-                          </div>
-                        </div>
-
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                  <DialogTrigger
+                    render={
+                      <Button className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700">
+                        <UserPlus className="mr-2 h-4 w-4" /> Quick Add
+                      </Button>
+                    }
+                  />
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Add New Student</DialogTitle>
+                      <DialogDescription>
+                        Add a student manually to the roster. They will immediately appear in the list.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleAddStudent} className="space-y-4 pt-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="bloodGroup">Blood Group</Label>
-                          <Select value={bloodGroup} onValueChange={(val) => setBloodGroup(val || "")}>
+                          <Label htmlFor="firstName">First Name</Label>
+                          <Input id="firstName" required value={firstName} onChange={e => setFirstName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">Last Name</Label>
+                          <Input id="lastName" required value={lastName} onChange={e => setLastName(e.target.value)} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="dob">Date of Birth</Label>
+                          <Input id="dob" type="date" required value={dob} onChange={e => setDob(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="gender">Gender</Label>
+                          <Select required value={gender} onValueChange={(val: any) => setGender(val)}>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select (Optional)" />
+                              <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
-                              {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(bg => (
-                                <SelectItem key={bg} value={bg}>{bg}</SelectItem>
-                              ))}
+                              <SelectItem value="MALE">Male</SelectItem>
+                              <SelectItem value="FEMALE">Female</SelectItem>
+                              <SelectItem value="OTHER">Other</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
 
-                        <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isAdding}>
-                          {isAdding ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...</> : "Add Student"}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              );
-            })()}
+                      <div className="space-y-2">
+                        <Label htmlFor="classSec">Class & Section</Label>
+                        <Input id="classSec" placeholder="e.g. 10-A" required value={classSec} onChange={e => setClassSec(e.target.value)} />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="height">Height (cm)</Label>
+                          <Input id="height" type="number" placeholder="Optional" value={height} onChange={e => setHeight(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="weight">Weight (kg) </Label>
+                          <Input id="weight" type="number" placeholder="Optional" value={weight} onChange={e => setWeight(e.target.value)} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bloodGroup">Blood Group</Label>
+                        <Select value={bloodGroup} onValueChange={(val) => setBloodGroup(val || "")}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select (Optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(bg => (
+                              <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isAdding}>
+                        {isAdding ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...</> : "Add Student"}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+
           </div>
 
           <div className="flex bg-slate-100 p-1 rounded-lg overflow-x-auto w-full sm:w-auto self-start">

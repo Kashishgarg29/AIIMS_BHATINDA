@@ -10,7 +10,7 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
 
   const event = await (prisma.event as any).findUnique({
     where: { id: eventId },
-    select: { eventDate: true, pocEmail: true, formConfig: true }
+    select: { eventDate: true, pocEmail: true, formConfig: true, schoolDetails: true }
   });
   if (!event) return notFound();
 
@@ -103,6 +103,7 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
       userId={session?.user?.id || ""}
       customCategoryBlock={customCategoryConfig}
       student={student}
+      schoolName={event?.schoolDetails}
     />
   );
 }

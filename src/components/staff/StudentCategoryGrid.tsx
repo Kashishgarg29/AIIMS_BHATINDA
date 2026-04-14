@@ -77,7 +77,8 @@ export function StudentCategoryGrid({
     userRole,
     formConfig,
     isUpcoming = false,
-    eventDate
+    eventDate,
+    schoolName
 }: {
     categoriesStatus: CategoryStatus[];
     assignedCategoryIds: string[];
@@ -95,6 +96,7 @@ export function StudentCategoryGrid({
     formConfig?: any;
     isUpcoming?: boolean;
     eventDate?: string | Date;
+    schoolName?: string;
 }) {
     const [activeTab, setActiveTab] = useState<string>(categoriesStatus[0]?.id || "");
     const activeCat = categoriesStatus.find(c => c.id === activeTab) || categoriesStatus[0];
@@ -227,6 +229,7 @@ export function StudentCategoryGrid({
                             isPOC={false}
                             isEmbedded={true}
                             requiredFields={formConfig?.[activeTab] || []}
+                            schoolName={schoolName}
                             customCategoryBlock={(() => {
                                 const customCategories = Array.isArray(formConfig?.customCategories) ? formConfig.customCategories : [];
                                 return customCategories.find((c: any) => c.id === activeTab);

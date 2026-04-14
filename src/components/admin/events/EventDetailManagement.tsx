@@ -4,10 +4,13 @@ import {
   Users,
   FileText,
   Settings,
-  ArrowRight,
   Activity,
   ArrowLeft,
-  Search
+  Search,
+  Pill,
+  FlaskConical,
+  ScrollText,
+  ArrowUpRight
 } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +25,8 @@ import { RemoveStaffButton } from "@/components/admin/directory/RemoveStaffButto
 import { SetEventHeadButton } from "@/components/admin/directory/SetEventHeadButton";
 import { EventFormConfigBuilder } from "@/components/admin/events/EventFormConfigBuilder";
 import { EventManagementActions } from "@/components/admin/events/EventManagementActions";
+import { PrescriptionPrintOverlay } from "@/components/staff/forms/PrescriptionPrintOverlay";
+import { LabTestPrintOverlay } from "@/components/staff/forms/LabTestPrintOverlay";
 
 interface EventDetailManagementProps {
   event: any;
@@ -47,6 +52,17 @@ export function EventDetailManagement({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+
+  // Printing State
+  const [printStudent, setPrintStudent] = useState<any>(null);
+  const [printMode, setPrintMode] = useState<"PRESCRIPTION" | "LAB" | null>(null);
+
+  const getReferredDepartments = (student: any) => {
+    const data = (student.medicalRecord?.data as Record<string, any>) || {};
+    return Object.entries(data)
+      .filter(([_, val]) => val?.status_nor === 'R')
+      .map(([key, _]) => key.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim());
+  };
 
   const filteredStudents = event.students.filter((s: any) => {
     const q = search.toLowerCase();
@@ -289,6 +305,7 @@ export function EventDetailManagement({
                           <th className="px-6 py-4 font-bold text-center">Class/Sec</th>
                           <th className="px-6 py-4 font-bold text-center">Gender</th>
                           <th className="px-6 py-4 font-bold text-center">Status</th>
+                          <th className="px-6 py-4 font-bold text-center">Reports</th>
                           <th className="px-6 py-4 font-bold text-center hidden md:table-cell">Last Updated</th>
                           <th className="px-6 py-4 font-bold text-center">Action</th>
                         </tr>
@@ -322,6 +339,83 @@ export function EventDetailManagement({
                                   {status === 'COMPLETED' && <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">Completed</Badge>}
                                   {status === 'IN_PROGRESS' && <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">In Progress</Badge>}
                                   {status === 'PENDING' && <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full opacity-60">Pending</Badge>}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    {status === 'COMPLETED' ? (
+                                      <>
+                                        {(() => {
+                                          const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+                                          const hasPrescription = Object.values(recordData).some((cat: any) => cat.prescription && cat.prescription.trim() !== "");
+                                          const hasLabTest = Object.values(recordData).some((cat: any) => cat.labTest && cat.labTest.trim() !== "");
+                                          const referredDepts = getReferredDepartments(student);
+
+                                          return (
+                                            <>
+                                              {hasPrescription && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  title="Download Medical Slip"
+                                                  className="h-8 w-8 p-0 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setPrintStudent(student);
+                                                    setPrintMode("PRESCRIPTION");
+                                                  }}
+                                                >
+                                                  <Pill className="h-4 w-4" />
+                                                </Button>
+                                              )}
+                                              {hasLabTest && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  title="Download Lab Investigations"
+                                                  className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setPrintStudent(student);
+                                                    setPrintMode("LAB");
+                                                  }}
+                                                >
+                                                  <FlaskConical className="h-4 w-4" />
+                                                </Button>
+                                              )}
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                title="Print Full Master Record"
+                                                className="h-8 w-8 p-0 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  window.open(`/print/${student.id}?mode=full`, '_blank');
+                                                }}
+                                              >
+                                                <ScrollText className="h-4 w-4" />
+                                              </Button>
+                                              {referredDepts.length > 0 && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  title="Print Referral Slip"
+                                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    window.open(`/print/${student.id}?mode=referred`, '_blank');
+                                                  }}
+                                                >
+                                                  <ArrowUpRight className="h-4 w-4" />
+                                                </Button>
+                                              )}
+                                            </>
+                                          );
+                                        })()}
+                                      </>
+                                    ) : (
+                                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Pending</span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4 text-slate-500 text-center hidden md:table-cell font-medium">{lastUpdated}</td>
                                 <td className="px-6 py-4 text-center">
@@ -358,6 +452,30 @@ export function EventDetailManagement({
           </div>
         </div>
       </main>
+
+      {printStudent && printMode === "PRESCRIPTION" && (
+        <PrescriptionPrintOverlay
+          student={printStudent}
+          eventDate={event.eventDate}
+          schoolName={event.schoolDetails}
+          onClose={() => {
+            setPrintStudent(null);
+            setPrintMode(null);
+          }}
+        />
+      )}
+
+      {printStudent && printMode === "LAB" && (
+        <LabTestPrintOverlay
+          student={printStudent}
+          eventDate={event.eventDate}
+          schoolName={event.schoolDetails}
+          onClose={() => {
+            setPrintStudent(null);
+            setPrintMode(null);
+          }}
+        />
+      )}
     </Tabs>
   );
 }

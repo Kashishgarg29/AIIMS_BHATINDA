@@ -17,7 +17,7 @@ async function main() {
     },
     {
       "email": "prerna@gmail.com",
-      "passwordHash": "$2b$10$g6twnc3.aRQTvlxK0S3njuY5j2IO76enmoimlZy1pjONsCpPSYfWa", // prerna123
+      "passwordHash": "$2b$10$g6twnc3.aRQTvlxK0S3njuY5j2IO76enmoimlZy1pjONsCpPSYfWa", // 123456
       "fullName": "Prerna Gupta",
       "role": "MEDICAL_STAFF",
       "isActive": true

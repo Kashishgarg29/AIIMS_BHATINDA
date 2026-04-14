@@ -10,7 +10,7 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
 
     const event = await (prisma.event as any).findUnique({
         where: { id: eventId },
-        select: { eventDate: true, pocEmail: true, formConfig: true }
+        select: { eventDate: true, pocEmail: true, formConfig: true, schoolDetails: true }
     });
     if (!event) return notFound();
 
@@ -89,6 +89,7 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
             customCategoryBlock={customCategoryConfig}
             student={student}
             isPOC={isPOC}
+            schoolName={event?.schoolDetails}
             basePath="/poc"
             userRole="SCHOOL_POC"
         />

@@ -43,7 +43,7 @@ export default async function StudentRecordMasterView(props: {
 
   const event = await (prisma.event as any).findUnique({
     where: { id: eventId },
-    select: { eventDate: true, pocEmail: true, formConfig: true }
+    select: { eventDate: true, pocEmail: true, formConfig: true, schoolDetails: true }
   });
 
   if (!student) return notFound();
@@ -164,6 +164,7 @@ export default async function StudentRecordMasterView(props: {
           assignedCategoryIds={assignedCategoryIds}
           eventId={eventId}
           eventDate={event?.eventDate?.toISOString()}
+          schoolName={event?.schoolDetails}
           studentId={studentId}
           student={student}
           backTo={backTo}

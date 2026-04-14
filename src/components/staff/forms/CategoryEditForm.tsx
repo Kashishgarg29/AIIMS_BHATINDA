@@ -16,6 +16,7 @@ import { saveMedicalCategory } from "@/lib/actions/db-sync";
 import { acquireLock, releaseLock } from "@/lib/actions/locks";
 import { useRouter } from "next/navigation";
 import { PrescriptionPrintOverlay } from "./PrescriptionPrintOverlay";
+import { LabTestPrintOverlay } from "./LabTestPrintOverlay";
 
 export function CategoryEditFormClient({
   eventId,
@@ -35,6 +36,7 @@ export function CategoryEditFormClient({
   userRole,
   isEmbedded = false,
   onClose,
+  schoolName,
 }: {
   eventId: string,
   eventDate?: Date | string,
@@ -53,6 +55,7 @@ export function CategoryEditFormClient({
   userRole?: string,
   isEmbedded?: boolean,
   onClose?: () => void,
+  schoolName?: string,
 }) {
   const router = useRouter();
 
@@ -61,7 +64,9 @@ export function CategoryEditFormClient({
   const [isLockedBy, setIsLockedBy] = useState<string | null>(null);
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [showPrintOverlay, setShowPrintOverlay] = useState(false);
+  const [showLabOverlay, setShowLabOverlay] = useState(false);
   const lastActivityTime = useRef(Date.now());
+  const EXCLUDED_FROM_GLOBAL_FIELDS = ["general_examination_merged", "vaccination_details", "symptoms"];
 
   // Lists for identifying field types based on ID
   const CHECKBOX_FIELDS = [
@@ -133,6 +138,14 @@ export function CategoryEditFormClient({
     .map(([key, val]) => ({
       category: key,
       text: val.prescription,
+      managedBy: val._managedBy
+    }));
+
+  const otherLabTests = Object.entries((student?.medicalRecord?.data as Record<string, any>) || {})
+    .filter(([key, val]) => key !== category && val?.labTest)
+    .map(([key, val]) => ({
+      category: key,
+      text: val.labTest,
       managedBy: val._managedBy
     }));
 
@@ -806,7 +819,7 @@ export function CategoryEditFormClient({
           </CardContent>
         </Card>
 
-        {category !== "general_examination_merged" && (
+        {!EXCLUDED_FROM_GLOBAL_FIELDS.includes(category) && (
           <Card className="shadow-sm border-slate-200 relative mb-6">
             {(isLockedBy || hasTimedOut) && (
               <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
@@ -846,42 +859,78 @@ export function CategoryEditFormClient({
                   )}
                 </div>
                 {(!formData.status_nor && !isReadOnly) && <p className="text-red-500 text-[10px] font-bold animate-pulse shrink-0">Required</p>}
-                {(formData.status_nor && isReadOnly) && <div className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Official Diagnosis</div>}
+
               </div>
             </CardContent>
           </Card>
         )}
 
-        <Card className="shadow-sm border-slate-200 relative mb-6">
+        {!EXCLUDED_FROM_GLOBAL_FIELDS.includes(category) && (
+          <Card className="shadow-sm border-slate-200 relative mb-6">
+            {(isLockedBy || hasTimedOut) && (
+              <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
+            )}
+            <CardContent className="p-4 bg-white border-t-2 border-slate-700 rounded-b-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-black text-slate-700 tracking-wide uppercase">
+                  Clinical Prescription
+                </h3>
+              </div>
+
+              {otherPrescriptions.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Prescriptions from other departments</p>
+                  {otherPrescriptions.map((p, idx) => (
+                    <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">
+                        {p.category.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim()}
+                        <span className="text-slate-400 font-medium ml-1 lowercase">by {p.managedBy || "doctor"}</span>
+                      </p>
+                      <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{p.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-2 relative">
+                {isReadOnly && <div className="absolute inset-0 z-10 cursor-default" />}
+                <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                  {otherPrescriptions.length > 0 ? "Add your prescription" : "Prescription for this department"}
+                </Label>
+                <Textarea
+                  disabled={isReadOnly || !!isLockedBy}
+                  className="text-sm min-h-[100px] border-2 border-slate-200 focus:border-slate-400 focus:ring-0 rounded-xl font-medium resize-y"
+                  value={formData.prescription || ""}
+                  onChange={(e) => handleFieldChange("prescription", e.target.value)}
+                  placeholder="Write specific medical advice, medicines, or follow-up instructions here..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {!EXCLUDED_FROM_GLOBAL_FIELDS.includes(category) && (
+          <Card className="shadow-sm border-slate-200 relative mb-6">
           {(isLockedBy || hasTimedOut) && (
             <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
           )}
           <CardContent className="p-4 bg-white border-t-2 border-slate-700 rounded-b-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-black text-slate-700 tracking-wide uppercase">
-                Clinical Prescription
+                Lab Investigations / Tests
               </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs font-bold text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
-                onClick={(e) => { e.preventDefault(); setShowPrintOverlay(true); }}
-              >
-                <Printer className="h-3.5 w-3.5 mr-1" />
-                Download PDF
-              </Button>
             </div>
 
-            {otherPrescriptions.length > 0 && (
+            {otherLabTests.length > 0 && (
               <div className="mb-4 space-y-2">
-                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Prescriptions from other departments</p>
-                {otherPrescriptions.map((p, idx) => (
+                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Investigations from other departments</p>
+                {otherLabTests.map((p, idx) => (
                   <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                     <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">
                       {p.category.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim()}
                       <span className="text-slate-400 font-medium ml-1 lowercase">by {p.managedBy || "doctor"}</span>
                     </p>
-                    <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{p.text}</p>
+                    <p className="text-sm font-medium italic text-slate-600 whitespace-pre-wrap">{p.text}</p>
                   </div>
                 ))}
               </div>
@@ -890,18 +939,19 @@ export function CategoryEditFormClient({
             <div className="space-y-2 relative">
               {isReadOnly && <div className="absolute inset-0 z-10 cursor-default" />}
               <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
-                {otherPrescriptions.length > 0 ? "Add your prescription" : "Prescription for this department"}
+                {otherLabTests.length > 0 ? "Add your investigations" : "Investigations for this department"}
               </Label>
               <Textarea
                 disabled={isReadOnly || !!isLockedBy}
-                className="text-sm min-h-[100px] border-2 border-slate-200 focus:border-slate-400 focus:ring-0 rounded-xl font-medium resize-y"
-                value={formData.prescription || ""}
-                onChange={(e) => handleFieldChange("prescription", e.target.value)}
-                placeholder="Write specific medical advice, medicines, or follow-up instructions here..."
+                className="text-sm min-h-[100px] border-2 border-slate-200 focus:border-slate-400 focus:ring-0 rounded-xl font-medium resize-y bg-slate-50/20"
+                value={formData.labTest || ""}
+                onChange={(e) => handleFieldChange("labTest", e.target.value)}
+                placeholder="List specific blood tests, X-rays, or other investigations required..."
               />
             </div>
           </CardContent>
         </Card>
+      )}
 
       </main>
 
@@ -932,7 +982,17 @@ export function CategoryEditFormClient({
         <PrescriptionPrintOverlay
           student={student}
           eventDate={eventDate}
+          schoolName={schoolName}
           onClose={() => setShowPrintOverlay(false)}
+        />
+      )}
+
+      {showLabOverlay && (
+        <LabTestPrintOverlay
+          student={student}
+          eventDate={eventDate}
+          schoolName={schoolName}
+          onClose={() => setShowLabOverlay(false)}
         />
       )}
     </div>

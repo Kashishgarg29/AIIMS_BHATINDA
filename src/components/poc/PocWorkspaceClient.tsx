@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, UserPlus, FileUp, Activity, ArrowLeft } from "lucide-react";
+import { Search, UserPlus, FileUp, Activity, ArrowLeft, Pill, FlaskConical, ScrollText, ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 import Papa from "papaparse";
+import { PrescriptionPrintOverlay } from "../staff/forms/PrescriptionPrintOverlay";
+import { LabTestPrintOverlay } from "../staff/forms/LabTestPrintOverlay";
 
 type StudentData = {
     id: string;
@@ -57,6 +59,17 @@ export function PocWorkspaceClient({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploadingCSV, setIsUploadingCSV] = useState(false);
     const [statusFilter, setStatusFilter] = useState("ALL");
+
+    // Printing State
+    const [printStudent, setPrintStudent] = useState<any>(null);
+    const [printMode, setPrintMode] = useState<"PRESCRIPTION" | "LAB" | null>(null);
+
+    const getReferredDepartments = (student: any) => {
+        const data = (student.medicalRecord?.data as Record<string, any>) || {};
+        return Object.entries(data)
+            .filter(([_, val]) => val?.status_nor === 'R')
+            .map(([key, _]) => key.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim());
+    };
 
     // Dynamic status
     const today = new Date();
@@ -367,6 +380,7 @@ export function PocWorkspaceClient({
                                     <th className="px-6 py-4 font-medium text-center">Class/Sec</th>
                                     <th className="px-6 py-4 font-medium text-center">Gender</th>
                                     <th className="px-6 py-4 font-medium text-center">Status</th>
+                                    <th className="px-6 py-4 font-medium text-center">Reports</th>
                                     <th className="px-6 py-4 font-medium text-center hidden md:table-cell">Last Updated</th>
                                     <th className="px-6 py-4 font-medium text-center">Action</th>
                                 </tr>
@@ -396,6 +410,83 @@ export function PocWorkspaceClient({
                                                 {status === 'IN_PROGRESS' && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200">In Progress</Badge>}
                                                 {status === 'PENDING' && <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-slate-200">Pending</Badge>}
                                             </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex items-center justify-center gap-1.5">
+                                                    {status === 'COMPLETED' ? (
+                                                        <>
+                                                            {(() => {
+                                                                const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+                                                                const hasPrescription = Object.values(recordData).some((cat: any) => cat.prescription && cat.prescription.trim() !== "");
+                                                                const hasLabTest = Object.values(recordData).some((cat: any) => cat.labTest && cat.labTest.trim() !== "");
+                                                                const referredDepts = getReferredDepartments(student);
+
+                                                                return (
+                                                                    <>
+                                                                        {hasPrescription && (
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                title="Download Medical Slip"
+                                                                                className="h-8 w-8 p-0 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setPrintStudent(student);
+                                                                                    setPrintMode("PRESCRIPTION");
+                                                                                }}
+                                                                            >
+                                                                                <Pill className="h-4 w-4" />
+                                                                            </Button>
+                                                                        )}
+                                                                        {hasLabTest && (
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                title="Download Lab Investigations"
+                                                                                className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setPrintStudent(student);
+                                                                                    setPrintMode("LAB");
+                                                                                }}
+                                                                            >
+                                                                                <FlaskConical className="h-4 w-4" />
+                                                                            </Button>
+                                                                        )}
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            title="Print Full Master Record"
+                                                                            className="h-8 w-8 p-0 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                window.open(`/print/${student.id}?mode=full`, '_blank');
+                                                                            }}
+                                                                        >
+                                                                            <ScrollText className="h-4 w-4" />
+                                                                        </Button>
+                                                                        {referredDepts.length > 0 && (
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                title="Print Referral Slip"
+                                                                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    window.open(`/print/${student.id}?mode=referred`, '_blank');
+                                                                                }}
+                                                                            >
+                                                                                <ArrowUpRight className="h-4 w-4" />
+                                                                            </Button>
+                                                                        )}
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Pending</span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4 text-slate-500 text-center hidden md:table-cell">{lastUpdated}</td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className="text-emerald-600 font-bold group-hover:text-emerald-700 transition flex items-center justify-center gap-1">
@@ -416,6 +507,30 @@ export function PocWorkspaceClient({
                     </div>
                 </div>
             </main>
+
+            {printStudent && printMode === "PRESCRIPTION" && (
+                <PrescriptionPrintOverlay
+                    student={printStudent}
+                    eventDate={eventDate}
+                    schoolName={schoolName}
+                    onClose={() => {
+                        setPrintStudent(null);
+                        setPrintMode(null);
+                    }}
+                />
+            )}
+
+            {printStudent && printMode === "LAB" && (
+                <LabTestPrintOverlay
+                    student={printStudent}
+                    eventDate={eventDate}
+                    schoolName={schoolName}
+                    onClose={() => {
+                        setPrintStudent(null);
+                        setPrintMode(null);
+                    }}
+                />
+            )}
         </>
     );
 }

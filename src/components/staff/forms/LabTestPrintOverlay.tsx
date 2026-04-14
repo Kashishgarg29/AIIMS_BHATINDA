@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { X, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function PrescriptionPrintOverlay({
+export function LabTestPrintOverlay({
   student,
   eventDate,
   schoolName,
@@ -28,7 +28,7 @@ export function PrescriptionPrintOverlay({
   }, []);
 
   const handlePrint = () => {
-    const printContent = document.getElementById('print-container');
+    const printContent = document.getElementById('lab-print-container');
     if (!printContent) return;
 
     const iframe = document.createElement('iframe');
@@ -103,12 +103,12 @@ export function PrescriptionPrintOverlay({
     });
   }
 
-  // Extract prescriptions
-  const prescriptions = Object.entries(recordData)
-    .filter(([key, val]) => val?.prescription)
+  // Extract lab tests (instead of prescriptions)
+  const labTests = Object.entries(recordData)
+    .filter(([key, val]) => val?.labTest)
     .map(([key, val]) => ({
       category: key.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim().toUpperCase(),
-      text: val.prescription,
+      text: val.labTest,
       doctor: val._managedBy
     }));
 
@@ -117,7 +117,7 @@ export function PrescriptionPrintOverlay({
   return (
     <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex justify-center items-start overflow-y-auto w-full pt-10 pb-24 no-print sm:px-4">
       {/* Container that IS the printable area */}
-      <div id="print-container" className="w-full max-w-[210mm] min-h-[297mm] bg-white text-black p-8 sm:p-12 sm:border sm:border-slate-300 sm:shadow-2xl relative flex flex-col mx-auto shrink-0 print:border-none print:shadow-none print:m-0 print:p-0">
+      <div id="lab-print-container" className="w-full max-w-[210mm] min-h-[297mm] bg-white text-black p-8 sm:p-12 sm:border sm:border-slate-300 sm:shadow-2xl relative flex flex-col mx-auto shrink-0 print:border-none print:shadow-none print:m-0 print:p-0">
 
         {/* Modal Controls (Hidden in Print) */}
         <div className="absolute top-4 right-4 flex gap-3 no-print z-10">
@@ -177,21 +177,26 @@ export function PrescriptionPrintOverlay({
           </div>
         </div>
 
-        {/* Prescriptions Section */}
+        {/* Section Heading specific to Lab Tests */}
+        <div className="mb-4 border-b border-black pb-1">
+          <h2 className="font-black text-lg uppercase tracking-widest">Lab Investigations / Tests</h2>
+        </div>
+
+        {/* Lab Tests Section */}
         <div className="mb-8">
-          {prescriptions.length === 0 ? (
+          {labTests.length === 0 ? (
             <div className="text-center py-12 text-gray-400 font-bold italic">
-              No prescriptions recorded for this patient.
+              No lab investigations recorded for this patient.
             </div>
           ) : (
             <div className="space-y-6">
-              {prescriptions.map((p, idx) => (
+              {labTests.map((p, idx) => (
                 <div key={idx} className="break-inside-avoid shadow-sm p-4 rounded-lg bg-gray-50 border border-gray-100 print:bg-white print:border-none print:p-0 print:shadow-none">
                   <div className="flex justify-between items-baseline mb-2 border-b border-dotted border-gray-300 pb-1">
                     <h3 className="font-black text-sm uppercase tracking-wide print:text-base">{p.category}</h3>
-                    <span className="text-[10px] font-bold text-gray-500 print:text-gray-800 uppercase">Consultant: {p.doctor || "Medical Officer"}</span>
+                    <span className="text-[10px] font-bold text-gray-500 print:text-gray-800 uppercase">Requested by: {p.doctor || "Medical Officer"}</span>
                   </div>
-                  <div className="text-sm font-medium whitespace-pre-wrap leading-relaxed py-2">
+                  <div className="text-sm font-medium whitespace-pre-wrap leading-relaxed py-2 italic text-slate-700">
                     {p.text}
                   </div>
                 </div>

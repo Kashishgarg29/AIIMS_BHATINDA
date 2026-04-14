@@ -20,7 +20,13 @@ export default async function EventWorkspace({ params }: { params: Promise<{ eve
         }
       },
       students: {
-        include: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          classSec: true,
+          gender: true,
+          age: true,
           medicalRecord: {
             select: { status: true, updatedAt: true, data: true }
           }

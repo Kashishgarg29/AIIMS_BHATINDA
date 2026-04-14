@@ -550,7 +550,6 @@ export function CategoryEditFormClient({
           { id: "earIssues", label: "Ear Issues" },
           { id: "noseIssues", label: "Nose Issues" },
           { id: "throatIssues", label: "Throat Issues" },
-          { id: "mouthBreathing", label: "Mouth Breathing" },
           { id: "presentComplaint", label: "Present Complaint" },
           { id: "currentMedication", label: "Current Medication" },
           { id: "otherInfo", label: "Other Information" },
@@ -561,10 +560,8 @@ export function CategoryEditFormClient({
         id: "dental_examination",
         title: "Dental Examination",
         fields: [
-          { id: "rottenTeeth", label: "Rotten Teeth" },
           { id: "cavities", label: "Cavities" },
           { id: "gumCondition", label: "Gum Condition" },
-          { id: "badBreath", label: "Bad Breath" },
           { id: "presentComplaint", label: "Present Complaint" },
           { id: "currentMedication", label: "Current Medication" },
           { id: "otherInfo", label: "Other Information" },
@@ -577,8 +574,6 @@ export function CategoryEditFormClient({
         fields: [
           { id: "visionRight", label: "Vision (Right Eye)" },
           { id: "visionLeft", label: "Vision (Left Eye)" },
-          { id: "cannotSeeBoard", label: "Cannot see board" },
-          { id: "rubsEyes", label: "Rubs eyes frequently" },
           { id: "spectacles", label: "Spectacles" },
           { id: "presentComplaint", label: "Present Complaint" },
           { id: "currentMedication", label: "Current Medication" },
@@ -592,8 +587,6 @@ export function CategoryEditFormClient({
         fields: [
           { id: "skinCondition", label: "Skin Condition" },
           { id: "nailsHair", label: "Nails & Hair Condition" },
-          { id: "whitePatches", label: "White Patches" },
-          { id: "cracksMouth", label: "Cracks at mouth corner" },
           { id: "presentComplaint", label: "Present Complaint" },
           { id: "currentMedication", label: "Current Medication" },
           { id: "otherInfo", label: "Other Information" },
@@ -604,9 +597,7 @@ export function CategoryEditFormClient({
         id: "system_wise_examination",
         title: "Systemic Examination",
         fields: [
-          { id: "limpingGait", label: "Locomotor System: Limping Gait" },
           { id: "abdomenIssues", label: "Abdomen: Issues" },
-          { id: "breathlessness", label: "Respiratory System: Breathlessness" },
           { id: "cardioIssues", label: "Cardiovascular System: Issues" },
           { id: "cnsIssues", label: "Central Nervous System: Issues" },
           { id: "presentComplaint", label: "Present Complaint" },
@@ -619,17 +610,26 @@ export function CategoryEditFormClient({
         id: "symptoms",
         title: "Clinical Presentation & Symptoms",
         fields: [
-          { id: "scratchesHead", label: "Scratches head frequently" },
-          { id: "headache", label: "Complains of headache" },
-          { id: "cannotSeeBoardSymptoms", label: "Cannot see board" },
-          { id: "pullsEars", label: "Pulls ears" },
-          { id: "nailBiting", label: "Nail biting" },
-          { id: "frequentUrination", label: "Frequent urination" },
+          { id: "scratchesHead", label: "Child constantly scratches the head" },
+          { id: "rubsEyes", label: "Child rubs eyes" },
+          { id: "headache", label: "Child complains of frequent headache" },
+          { id: "cannotSeeBoard", label: "Child cannot see what is written on the board" },
+          { id: "pullsEars", label: "Child constantly pokes fingers or pulls ear" },
+          { id: "rottenTeeth", label: "Teeth look black or rotten" },
+          { id: "badBreath", label: "Breath has a bad odour" },
+          { id: "cracksMouth", label: "Cracks at corners of mouth" },
+          { id: "mouthBreathing", label: "Child tends to breath through his mouth" },
+          { id: "nailBiting", label: "Child bites nails" },
+          { id: "whitePatches", label: "White Patches" },
+          { id: "limpingGait", label: "Limping Gait" },
+          { id: "breathlessness", label: "Child gets Attacks of breathlessness" },
+          { id: "frequentUrination", label: "Frequent Urination" },
           { id: "diarrhoea", label: "Diarrhoea" },
           { id: "vomiting", label: "Vomiting" },
-          { id: "stammering", label: "Stammering" },
-          { id: "faintingEpisodes", label: "Fainting episodes" },
-          { id: "anyOtherSymptoms", label: "Any other symptoms" },
+          { id: "stammering", label: "Child stammers & cannot speak properly" },
+          { id: "bloodInStool", label: "Blood passed with stools" },
+          { id: "faintingEpisodes", label: "Episodes of fainting esp. in summers" },
+          { id: "anyOtherSymptoms", label: "Any other problem" },
         ],
       },
     ];
@@ -856,30 +856,29 @@ export function CategoryEditFormClient({
           {(isLockedBy || hasTimedOut) && (
             <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
           )}
-          <CardContent className="p-4 bg-white border-t-4 border-indigo-500 rounded-b-xl">
+          <CardContent className="p-4 bg-white border-t-2 border-slate-700 rounded-b-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 tracking-wide uppercase">
-                <FileText className="h-4 w-4 text-indigo-500" />
+              <h3 className="text-xs font-black text-slate-700 tracking-wide uppercase">
                 Clinical Prescription
               </h3>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs font-bold text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300"
+                className="h-8 text-xs font-bold text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                 onClick={(e) => { e.preventDefault(); setShowPrintOverlay(true); }}
               >
                 <Printer className="h-3.5 w-3.5 mr-1" />
                 Download PDF
               </Button>
             </div>
-            
+
             {otherPrescriptions.length > 0 && (
               <div className="mb-4 space-y-2">
                 <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Prescriptions from other departments</p>
                 {otherPrescriptions.map((p, idx) => (
                   <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest mb-1">
-                      {p.category.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim()} 
+                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">
+                      {p.category.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim()}
                       <span className="text-slate-400 font-medium ml-1 lowercase">by {p.managedBy || "doctor"}</span>
                     </p>
                     <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{p.text}</p>
@@ -891,11 +890,11 @@ export function CategoryEditFormClient({
             <div className="space-y-2 relative">
               {isReadOnly && <div className="absolute inset-0 z-10 cursor-default" />}
               <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
-                 {otherPrescriptions.length > 0 ? "Add your prescription" : "Prescription for this department"}
+                {otherPrescriptions.length > 0 ? "Add your prescription" : "Prescription for this department"}
               </Label>
               <Textarea
                 disabled={isReadOnly || !!isLockedBy}
-                className="text-sm min-h-[100px] border-2 border-indigo-100 focus:border-indigo-400 focus:ring-0 rounded-xl font-medium resize-y"
+                className="text-sm min-h-[100px] border-2 border-slate-200 focus:border-slate-400 focus:ring-0 rounded-xl font-medium resize-y"
                 value={formData.prescription || ""}
                 onChange={(e) => handleFieldChange("prescription", e.target.value)}
                 placeholder="Write specific medical advice, medicines, or follow-up instructions here..."
@@ -930,10 +929,10 @@ export function CategoryEditFormClient({
       )}
 
       {showPrintOverlay && (
-        <PrescriptionPrintOverlay 
-          student={student} 
-          eventDate={eventDate} 
-          onClose={() => setShowPrintOverlay(false)} 
+        <PrescriptionPrintOverlay
+          student={student}
+          eventDate={eventDate}
+          onClose={() => setShowPrintOverlay(false)}
         />
       )}
     </div>

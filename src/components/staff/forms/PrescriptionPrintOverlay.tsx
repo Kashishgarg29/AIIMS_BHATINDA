@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { X, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function PrescriptionPrintOverlay({ 
-  student, 
-  eventDate, 
-  onClose 
-}: { 
-  student: any, 
-  eventDate?: Date | string, 
-  onClose: () => void 
+export function PrescriptionPrintOverlay({
+  student,
+  eventDate,
+  onClose
+}: {
+  student: any,
+  eventDate?: Date | string,
+  onClose: () => void
 }) {
   const [isReady, setIsReady] = useState(false);
 
@@ -19,7 +19,7 @@ export function PrescriptionPrintOverlay({
     // Prevent background scrolling while modal is open
     document.body.style.overflow = "hidden";
     setIsReady(true);
-    
+
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -41,8 +41,8 @@ export function PrescriptionPrintOverlay({
 
     // Get Tailwind CSS from main document
     const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-                           .map(el => el.outerHTML)
-                           .join('');
+      .map(el => el.outerHTML)
+      .join('');
 
     doc.open();
     doc.write(`
@@ -76,12 +76,12 @@ export function PrescriptionPrintOverlay({
     setTimeout(() => {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
-      
+
       // Cleanup after print dialog opens 
       setTimeout(() => {
-         if (document.body.contains(iframe)) {
-             document.body.removeChild(iframe);
-         }
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
       }, 2000);
     }, 500);
   };
@@ -116,17 +116,17 @@ export function PrescriptionPrintOverlay({
     <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex justify-center items-start overflow-y-auto w-full pt-10 pb-24 no-print sm:px-4">
       {/* Container that IS the printable area */}
       <div id="print-container" className="w-full max-w-[210mm] min-h-[297mm] bg-white text-black p-8 sm:p-12 sm:border sm:border-slate-300 sm:shadow-2xl relative flex flex-col mx-auto shrink-0 print:border-none print:shadow-none print:m-0 print:p-0">
-        
+
         {/* Modal Controls (Hidden in Print) */}
         <div className="absolute top-4 right-4 flex gap-3 no-print z-10">
-          <Button 
+          <Button
             onClick={handlePrint}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm h-8 px-3 rounded-md"
+            className="bg-slate-600 hover:bg-slate-700 text-white font-bold shadow-sm h-8 px-3 rounded-md"
           >
             <Printer className="w-4 h-4 mr-2" /> Print PDF
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={onClose}
             className="bg-white hover:bg-red-50 hover:text-red-600 border-slate-300 shadow-sm text-slate-700 font-bold h-8 w-8 p-0 rounded-md"
           >
@@ -148,25 +148,25 @@ export function PrescriptionPrintOverlay({
             <span className="font-bold text-base uppercase whitespace-nowrap overflow-hidden text-ellipsis">{student.firstName} {student.lastName}</span>
           </div>
           <div>
-             <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Age & Gender</span>
-             <span className="font-bold text-base uppercase">{student.age} Y / {student.gender?.[0] || 'U'}</span>
+            <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Age & Gender</span>
+            <span className="font-bold text-base uppercase">{student.age} Y / {student.gender?.[0] || 'U'}</span>
           </div>
           <div>
-             <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Class / Section</span>
-             <span className="font-bold text-base uppercase">{student.classSec}</span>
+            <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Class / Section</span>
+            <span className="font-bold text-base uppercase">{student.classSec}</span>
           </div>
           <div>
-             <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Date</span>
-             <span className="font-bold text-base uppercase">{dateStr}</span>
+            <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Date</span>
+            <span className="font-bold text-base uppercase">{dateStr}</span>
           </div>
           <div className="col-span-2 md:col-span-1 grid grid-cols-2 gap-2">
             <div>
-               <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Height</span>
-               <span className="font-bold text-base uppercase">{height} {height !== "NA" && "CM"}</span>
+              <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Height</span>
+              <span className="font-bold text-base uppercase">{height} {height !== "NA" && "CM"}</span>
             </div>
             <div>
-               <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Weight</span>
-               <span className="font-bold text-base uppercase">{weight} {weight !== "NA" && "KG"}</span>
+              <span className="block text-[10px] uppercase font-black tracking-widest text-gray-500 print:text-black">Weight</span>
+              <span className="font-bold text-base uppercase">{weight} {weight !== "NA" && "KG"}</span>
             </div>
           </div>
         </div>
@@ -178,15 +178,15 @@ export function PrescriptionPrintOverlay({
               No prescriptions recorded for this patient.
             </div>
           ) : (
-             <div className="space-y-6">
+            <div className="space-y-6">
               {prescriptions.map((p, idx) => (
                 <div key={idx} className="break-inside-avoid shadow-sm p-4 rounded-lg bg-gray-50 border border-gray-100 print:bg-white print:border-none print:p-0 print:shadow-none">
                   <div className="flex justify-between items-baseline mb-2 border-b border-dotted border-gray-300 pb-1">
-                     <h3 className="font-black text-sm uppercase tracking-wide print:text-base">{p.category}</h3>
-                     <span className="text-[10px] font-bold text-gray-500 print:text-gray-800 uppercase">Consultant: {p.doctor || "Medical Officer"}</span>
+                    <h3 className="font-black text-sm uppercase tracking-wide print:text-base">{p.category}</h3>
+                    <span className="text-[10px] font-bold text-gray-500 print:text-gray-800 uppercase">Consultant: {p.doctor || "Medical Officer"}</span>
                   </div>
                   <div className="text-base font-medium whitespace-pre-wrap leading-relaxed py-2">
-                     {p.text}
+                    {p.text}
                   </div>
                 </div>
               ))}
@@ -196,12 +196,12 @@ export function PrescriptionPrintOverlay({
 
         {/* Stamp Area */}
         <div className="mt-24 pt-8 border-t border-gray-300 flex justify-end break-inside-avoid">
-           <div className="w-64 text-center">
-             <div className="h-24 border-2 border-dashed border-gray-300 rounded mb-2 flex items-center justify-center print:border-gray-400">
-               <span className="text-gray-300 font-black uppercase text-xs tracking-widest print:text-gray-400">Stamp Area</span>
-             </div>
-             <p className="text-xs font-black uppercase tracking-wider">Medical Officer Signature / Stamp</p>
-           </div>
+          <div className="w-64 text-center">
+            <div className="h-24 border-2 border-dashed border-gray-300 rounded mb-2 flex items-center justify-center print:border-gray-400">
+              <span className="text-gray-300 font-black uppercase text-xs tracking-widest print:text-gray-400">Stamp Area</span>
+            </div>
+            <p className="text-xs font-black uppercase tracking-wider">Medical Officer Signature / Stamp</p>
+          </div>
         </div>
 
       </div>

@@ -76,7 +76,8 @@ export function StudentCategoryGrid({
     userName,
     userRole,
     formConfig,
-    isUpcoming = false
+    isUpcoming = false,
+    eventDate
 }: {
     categoriesStatus: CategoryStatus[];
     assignedCategoryIds: string[];
@@ -93,6 +94,7 @@ export function StudentCategoryGrid({
     userRole?: string;
     formConfig?: any;
     isUpcoming?: boolean;
+    eventDate?: string | Date;
 }) {
     const [activeTab, setActiveTab] = useState<string>(categoriesStatus[0]?.id || "");
     const activeCat = categoriesStatus.find(c => c.id === activeTab) || categoriesStatus[0];
@@ -212,6 +214,7 @@ export function StudentCategoryGrid({
                     <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[400px]">
                         <CategoryEditFormClient
                             eventId={eventId}
+                            eventDate={eventDate}
                             studentId={studentId}
                             category={activeTab}
                             initialData={activeCat?.data || {}}

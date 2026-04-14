@@ -163,6 +163,7 @@ export default async function StudentRecordMasterView(props: {
           categoriesStatus={categoriesStatus}
           assignedCategoryIds={assignedCategoryIds}
           eventId={eventId}
+          eventDate={event?.eventDate?.toISOString()}
           studentId={studentId}
           student={student}
           backTo={backTo}

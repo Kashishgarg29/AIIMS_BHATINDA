@@ -92,6 +92,7 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
   return (
     <CategoryEditFormClient
       eventId={eventId}
+      eventDate={event?.eventDate}
       studentId={studentId}
       category={category}
       initialData={categoryData}

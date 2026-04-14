@@ -3,7 +3,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, FileCheck, Save, Loader2, ArrowLeft } from "lucide-react";
+import { AlertCircle, FileCheck, Save, Loader2, ArrowLeft, Printer, FileText } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
@@ -15,9 +15,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { saveMedicalCategory } from "@/lib/actions/db-sync";
 import { acquireLock, releaseLock } from "@/lib/actions/locks";
 import { useRouter } from "next/navigation";
+import { PrescriptionPrintOverlay } from "./PrescriptionPrintOverlay";
 
 export function CategoryEditFormClient({
   eventId,
+  eventDate,
   studentId,
   category,
   initialData,
@@ -35,6 +37,7 @@ export function CategoryEditFormClient({
   onClose,
 }: {
   eventId: string,
+  eventDate?: Date | string,
   studentId: string,
   category: string,
   initialData: Record<string, any>,
@@ -57,6 +60,7 @@ export function CategoryEditFormClient({
   const [error, setError] = useState<string | null>(null);
   const [isLockedBy, setIsLockedBy] = useState<string | null>(null);
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [showPrintOverlay, setShowPrintOverlay] = useState(false);
   const lastActivityTime = useRef(Date.now());
 
   // Lists for identifying field types based on ID
@@ -123,6 +127,14 @@ export function CategoryEditFormClient({
   });
 
   const lastCategoryKey = useRef<string>("");
+
+  const otherPrescriptions = Object.entries((student?.medicalRecord?.data as Record<string, any>) || {})
+    .filter(([key, val]) => key !== category && val?.prescription)
+    .map(([key, val]) => ({
+      category: key,
+      text: val.prescription,
+      managedBy: val._managedBy
+    }));
 
   // SYNC DATA WHEN CATEGORY OR STUDENT CHANGES (CRITICAL FOR EMBEDDED MODE)
   // We only sync initialData when the category or student actually changes to avoid overwriting current edits
@@ -839,6 +851,59 @@ export function CategoryEditFormClient({
             </CardContent>
           </Card>
         )}
+
+        <Card className="shadow-sm border-slate-200 relative mb-6">
+          {(isLockedBy || hasTimedOut) && (
+            <div className="absolute inset-0 z-10 bg-slate-50/40 cursor-not-allowed rounded-xl" title="Locked by another user" />
+          )}
+          <CardContent className="p-4 bg-white border-t-4 border-indigo-500 rounded-b-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 tracking-wide uppercase">
+                <FileText className="h-4 w-4 text-indigo-500" />
+                Clinical Prescription
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-bold text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300"
+                onClick={(e) => { e.preventDefault(); setShowPrintOverlay(true); }}
+              >
+                <Printer className="h-3.5 w-3.5 mr-1" />
+                Download PDF
+              </Button>
+            </div>
+            
+            {otherPrescriptions.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Prescriptions from other departments</p>
+                {otherPrescriptions.map((p, idx) => (
+                  <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest mb-1">
+                      {p.category.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim()} 
+                      <span className="text-slate-400 font-medium ml-1 lowercase">by {p.managedBy || "doctor"}</span>
+                    </p>
+                    <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{p.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-2 relative">
+              {isReadOnly && <div className="absolute inset-0 z-10 cursor-default" />}
+              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                 {otherPrescriptions.length > 0 ? "Add your prescription" : "Prescription for this department"}
+              </Label>
+              <Textarea
+                disabled={isReadOnly || !!isLockedBy}
+                className="text-sm min-h-[100px] border-2 border-indigo-100 focus:border-indigo-400 focus:ring-0 rounded-xl font-medium resize-y"
+                value={formData.prescription || ""}
+                onChange={(e) => handleFieldChange("prescription", e.target.value)}
+                placeholder="Write specific medical advice, medicines, or follow-up instructions here..."
+              />
+            </div>
+          </CardContent>
+        </Card>
+
       </main>
 
       {/* Floating Save Action Bar */}
@@ -862,6 +927,14 @@ export function CategoryEditFormClient({
             </div>
           </div>
         </div>
+      )}
+
+      {showPrintOverlay && (
+        <PrescriptionPrintOverlay 
+          student={student} 
+          eventDate={eventDate} 
+          onClose={() => setShowPrintOverlay(false)} 
+        />
       )}
     </div>
   );

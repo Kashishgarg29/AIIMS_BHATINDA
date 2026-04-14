@@ -77,6 +77,7 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
     return (
         <CategoryEditFormClient
             eventId={eventId}
+            eventDate={event?.eventDate}
             studentId={studentId}
             category={category}
             initialData={categoryData}

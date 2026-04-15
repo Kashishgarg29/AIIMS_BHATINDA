@@ -86,18 +86,28 @@ export function PocWorkspaceClient({
 
     const canAddStudents = dynamicStatus !== "PAST";
 
-    const filteredStudents = students.filter(s => {
-        const q = search.toLowerCase();
-        const matchesSearch = s.firstName.toLowerCase().includes(q) ||
-            s.lastName.toLowerCase().includes(q) ||
-            s.classSec.toLowerCase().includes(q);
+    const STATUS_ORDER: Record<string, number> = { PENDING: 0, IN_PROGRESS: 1, COMPLETED: 2 };
 
-        if (!matchesSearch) return false;
-        if (statusFilter === "ALL") return true;
+    const filteredStudents = students
+        .filter(s => {
+            const q = search.toLowerCase();
+            const matchesSearch = s.firstName.toLowerCase().includes(q) ||
+                s.lastName.toLowerCase().includes(q) ||
+                s.classSec.toLowerCase().includes(q);
 
-        const sStatus = s.medicalRecord?.status || "PENDING";
-        return sStatus === statusFilter;
-    });
+            if (!matchesSearch) return false;
+            if (statusFilter === "ALL") return true;
+
+            const sStatus = s.medicalRecord?.status || "PENDING";
+            return sStatus === statusFilter;
+        })
+        .sort((a, b) => {
+            const aStatus = a.medicalRecord?.status || "PENDING";
+            const bStatus = b.medicalRecord?.status || "PENDING";
+            const diff = (STATUS_ORDER[aStatus] ?? 0) - (STATUS_ORDER[bStatus] ?? 0);
+            if (diff !== 0) return diff;
+            return a.firstName.localeCompare(b.firstName);
+        });
 
     const total = students.length;
     const done = students.filter(s => s.medicalRecord?.status === "COMPLETED").length;

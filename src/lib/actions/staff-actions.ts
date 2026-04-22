@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import bcryptjs from "bcryptjs";
+import { generateStudentUID, parseDOB } from "../utils/student-utils";
 
 export async function addStudentToEvent(data: {
   eventId: string;
@@ -22,9 +23,9 @@ export async function addStudentToEvent(data: {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    const event = await (prisma.event as any).findUnique({
+    const event = await prisma.event.findUnique({
       where: { id: data.eventId },
-      select: { eventDate: true, pocEmail: true }
+      select: { eventDate: true, pocEmail: true, schoolDetails: true }
     });
 
     if (!event) throw new Error("Event not found");
@@ -51,18 +52,35 @@ export async function addStudentToEvent(data: {
       }
     }
 
-    const student = await prisma.student.create({
-      data: {
-        eventId: data.eventId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        classSec: data.classSec,
-        age: data.age,
-        gender: data.gender,
-      }
+    const studentDob = data.dob ? parseDOB(data.dob) : null;
+    
+    // Find or Create Student using transaction to ensure UID sequentiality
+    const student = await prisma.$transaction(async (tx) => {
+      let existingStudent = await tx.student.findFirst({
+        where: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dateOfBirth: studentDob,
+          schoolName: event.schoolDetails,
+        }
+      });
+
+      if (existingStudent) return existingStudent;
+
+      const studentUID = await generateStudentUID(studentDob || new Date(), tx);
+      return await tx.student.create({
+        data: {
+          studentUID,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dateOfBirth: studentDob,
+          gender: data.gender,
+          schoolName: event.schoolDetails,
+        }
+      });
     });
 
-    // Also initialize a medical record with demographic details
+    // Create a medical record for this specific event
     await prisma.medicalRecord.create({
       data: {
         studentId: student.id,
@@ -78,7 +96,7 @@ export async function addStudentToEvent(data: {
             weight: data.weight || "",
             bloodGroup: data.bloodGroup || "",
             _lastUpdated: new Date().toISOString(),
-            _managedBy: "System (Initial Import)"
+            _managedBy: "System (Direct Add)"
           }
         }
       }
@@ -90,7 +108,7 @@ export async function addStudentToEvent(data: {
     return { success: true, studentId: student.id };
   } catch (error: any) {
     console.error("Failed to add student:", error);
-    return { success: false, error: "Failed to add student. They may already exist." };
+    return { success: false, error: "Failed to add student. Ensure data is valid." };
   }
 }
 
@@ -113,9 +131,9 @@ export async function bulkAddStudentsToEvent(data: {
     if (!session?.user?.id) throw new Error("Unauthorized");
 
     const { eventId, students } = data;
-    const event = await (prisma.event as any).findUnique({
+    const event = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { eventDate: true, pocEmail: true }
+      select: { eventDate: true, pocEmail: true, schoolDetails: true }
     });
 
     if (!event) throw new Error("Event not found");
@@ -142,61 +160,70 @@ export async function bulkAddStudentsToEvent(data: {
       }
     }
 
-    // Deadline Check for POC
-    if (isPOC && !isAdmin) {
-      const eventDate = new Date(event.eventDate);
-      eventDate.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (today > eventDate) {
-        throw new Error("Deadline passed: School representatives can only add students until the event ends.");
-      }
-    }
-
-
-    // Use a transaction to ensure all or nothing
-    await prisma.$transaction(async (tx: any) => {
-      // 1. Create all students and get their IDs back
-      const createdStudents = await Promise.all(
-        students.map((s: any) => tx.student.create({
-          data: {
-            eventId,
+    // Use a transaction for bulk operation
+    await prisma.$transaction(async (tx) => {
+      for (const s of students) {
+        const studentDob = s.dob ? parseDOB(s.dob) : null;
+        
+        // Match existing student
+        let student = await tx.student.findFirst({
+          where: {
             firstName: s.firstName,
             lastName: s.lastName,
-            classSec: s.classSec,
-            age: s.age,
-            gender: s.gender,
+            dateOfBirth: studentDob,
+            schoolName: event.schoolDetails,
           }
-        }))
-      );
+        });
 
-      // 2. Create the associated medical records with demographic info
-      const medicalRecordsData = createdStudents.map((student, index) => {
-        const s = students[index];
-        return {
-          studentId: student.id,
-          eventId,
-          status: "PENDING" as const,
-          data: {
-            general_examination_merged: {
-              dob: s.dob || "",
-              age: s.age?.toString() || "",
-              sex: s.gender === "MALE" ? "Male" : s.gender === "FEMALE" ? "Female" : "Other",
-              classSection: s.classSec || "",
-              height: s.height || "",
-              weight: s.weight || "",
-              bloodGroup: s.bloodGroup || "",
-              _lastUpdated: new Date().toISOString(),
-              _managedBy: "System (Bulk Import)"
+        if (!student) {
+          const studentUID = await generateStudentUID(studentDob || new Date(), tx);
+          student = await tx.student.create({
+            data: {
+              studentUID,
+              firstName: s.firstName,
+              lastName: s.lastName,
+              dateOfBirth: studentDob,
+              gender: s.gender,
+              schoolName: event.schoolDetails,
+            }
+          });
+        }
+
+        // Create Medical Record (Skip if already exists for this event)
+        const existingRecord = await tx.medicalRecord.findUnique({
+          where: {
+            studentId_eventId: {
+              studentId: student.id,
+              eventId: eventId
             }
           }
-        };
-      });
+        });
 
-      await tx.medicalRecord.createMany({
-        data: medicalRecordsData
-      });
+        if (!existingRecord) {
+          await tx.medicalRecord.create({
+            data: {
+              studentId: student.id,
+              eventId: eventId,
+              status: "PENDING",
+              data: {
+                general_examination_merged: {
+                  dob: s.dob || "",
+                  age: s.age?.toString() || "",
+                  sex: s.gender === "MALE" ? "Male" : s.gender === "FEMALE" ? "Female" : "Other",
+                  classSection: s.classSec || "",
+                  height: s.height || "",
+                  weight: s.weight || "",
+                  bloodGroup: s.bloodGroup || "",
+                  _lastUpdated: new Date().toISOString(),
+                  _managedBy: "System (Bulk Import)"
+                }
+              }
+            }
+          });
+        }
+      }
+    }, {
+      timeout: 30000 // Increase timeout for bulk operations
     });
 
     revalidatePath(`/staff/workspace/${eventId}`);
@@ -205,7 +232,7 @@ export async function bulkAddStudentsToEvent(data: {
     return { success: true, count: students.length };
   } catch (error: any) {
     console.error("Failed to bulk add students:", error);
-    return { success: false, error: "Failed to bulk add students. Check for duplicates or invalid data." };
+    return { success: false, error: "Failed to bulk add students. Ensure data is valid." };
   }
 }
 

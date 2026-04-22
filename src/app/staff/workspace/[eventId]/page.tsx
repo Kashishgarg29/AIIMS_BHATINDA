@@ -9,7 +9,7 @@ export default async function EventWorkspace({ params }: { params: Promise<{ eve
   const session = await getServerSession(authOptions);
 
   // Fetch event deep data
-  const event = await (prisma.event as any).findUnique({
+  const event = await prisma.event.findUnique({
     where: { id: eventId },
     include: {
       eventStaff: {
@@ -19,24 +19,40 @@ export default async function EventWorkspace({ params }: { params: Promise<{ eve
           }
         }
       },
-      students: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          classSec: true,
-          gender: true,
-          age: true,
-          medicalRecord: {
-            select: { status: true, updatedAt: true, data: true }
+      medicalRecords: {
+        include: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              studentUID: true,
+              gender: true,
+            }
           }
         },
-        orderBy: { firstName: "asc" }
+        orderBy: { student: { firstName: "asc" } }
       }
     }
   });
 
   if (!event) return notFound();
+
+  // Map medicalRecords back to the format WorkspaceClient expects
+  const students = event.medicalRecords.map(mr => ({
+    id: mr.student.id,
+    firstName: mr.student.firstName,
+    lastName: mr.student.lastName,
+    studentUID: mr.student.studentUID,
+    classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A",
+    gender: mr.student.gender,
+    age: parseInt((mr.data as any)?.general_examination_merged?.age || "0"),
+    medicalRecord: {
+      status: mr.status,
+      updatedAt: mr.updatedAt,
+      data: mr.data
+    }
+  }));
 
   // Resolve event head info
   const eventHeadId = (event.formConfig as any)?.eventHeadId;
@@ -49,7 +65,7 @@ export default async function EventWorkspace({ params }: { params: Promise<{ eve
         schoolName={event.schoolDetails}
         eventDate={event.eventDate}
         location="Main Campus"
-        students={event.students}
+        students={students as any}
         eventStaff={event.eventStaff.map((s: any) => s.user)}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         formConfig={event.formConfig as any}

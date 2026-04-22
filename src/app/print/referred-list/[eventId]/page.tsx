@@ -12,26 +12,24 @@ export default async function ReferredListPrintPage(props: {
 
     if (!event) return notFound();
 
-    const students = await prisma.student.findMany({
+    const medicalRecords = await prisma.medicalRecord.findMany({
         where: {
             eventId: eventId,
-            medicalRecord: {
-                isNot: null
-            }
         },
         include: {
-            medicalRecord: true
+            student: true
         },
-        orderBy: [
-            { classSec: 'asc' },
-            { firstName: 'asc' }
-        ]
     });
 
-    // Filter students who are referred in at least one section
-    const referredStudents = students.filter(student => {
-        const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+    // Filter and Sort: find students who are referred in at least one section
+    const referredList = medicalRecords.filter(mr => {
+        const recordData = (mr.data as Record<string, any>) || {};
         return Object.values(recordData).some((section: any) => section.status_nor === 'R');
+    }).sort((a, b) => {
+        const classA = (a.data as any)?.general_examination_merged?.classSection || "";
+        const classB = (b.data as any)?.general_examination_merged?.classSection || "";
+        if (classA !== classB) return classA.localeCompare(classB);
+        return a.student.firstName.localeCompare(b.student.firstName);
     });
 
     return (
@@ -42,7 +40,7 @@ export default async function ReferredListPrintPage(props: {
                 <p className="text-xs mt-1">{event.schoolDetails}</p>
                 <div className="flex justify-between text-[10px] mt-2 font-bold">
                     <span>Event Date: {new Date(event.eventDate).toLocaleDateString()}</span>
-                    <span>Total Referred: {referredStudents.length}</span>
+                    <span>Total Referred: {referredList.length}</span>
                 </div>
             </div>
 
@@ -58,8 +56,9 @@ export default async function ReferredListPrintPage(props: {
                     </tr>
                 </thead>
                 <tbody>
-                    {referredStudents.map((student) => {
-                        const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+                    {referredList.map((mr) => {
+                        const student = mr.student;
+                        const recordData = (mr.data as Record<string, any>) || {};
                         const referredSections = Object.entries(recordData)
                             .filter(([_, data]: [string, any]) => data.status_nor === 'R')
                             .map(([key, data]: [string, any]) => {
@@ -68,11 +67,11 @@ export default async function ReferredListPrintPage(props: {
                             });
 
                         return (
-                            <tr key={student.id} className="break-inside-avoid">
-                                <td className="border border-black p-1 align-top">{student.classSec}</td>
+                            <tr key={mr.id} className="break-inside-avoid">
+                                <td className="border border-black p-1 align-top">{recordData.general_examination_merged?.classSection || "N/A"}</td>
                                 <td className="border border-black p-1 align-top font-bold">{student.firstName} {student.lastName}</td>
                                 <td className="border border-black p-1 align-top">{student.gender}</td>
-                                <td className="border border-black p-1 align-top">{student.age}</td>
+                                <td className="border border-black p-1 align-top">{recordData.general_examination_merged?.age || "N/A"}</td>
                                 <td className="border border-black p-1 align-top">
                                     <ul className="list-disc pl-3">
                                         {referredSections.map((info, idx) => (

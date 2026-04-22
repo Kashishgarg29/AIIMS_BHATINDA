@@ -13,11 +13,20 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ e
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
-      medicalRecord: true,
+      medicalRecords: {
+        where: { eventId: eventId }
+      },
     }
   });
 
   if (!student) return notFound();
 
-  return <PrintablePrescription student={student} event={event} />;
+  // Create a combined object that matches what PrintablePrescription expects if necessary,
+  // or just pass the first record as 'medicalRecord' if it expects that.
+  const studentWithRecord = {
+    ...student,
+    medicalRecord: student.medicalRecords[0] || null
+  };
+
+  return <PrintablePrescription student={studentWithRecord} event={event} />;
 }

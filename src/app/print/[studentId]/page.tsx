@@ -118,23 +118,31 @@ const CHECKBOX_FIELDS = [
 
 export default async function PrintStudentPage(props: {
     params: Promise<{ studentId: string }>,
-    searchParams: Promise<{ mode?: string }>
+    searchParams: Promise<{ mode?: string, eventId?: string }>
 }) {
     const { studentId } = await props.params;
-    const { mode } = await props.searchParams;
+    const { mode, eventId } = await props.searchParams;
 
     const student = await prisma.student.findUnique({
         where: { id: studentId },
         include: {
-            event: true,
-            medicalRecord: true
+            medicalRecords: {
+                where: eventId ? { eventId: eventId } : undefined,
+                include: {
+                    event: true
+                },
+                orderBy: { createdAt: 'desc' },
+                take: 1
+            }
         }
     });
 
-    if (!student) return notFound();
+    if (!student || student.medicalRecords.length === 0) return notFound();
 
-    const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
-    const formConfig = (student.event.formConfig as any) || {};
+    const currentMedicalRecord = student.medicalRecords[0];
+    const event = currentMedicalRecord.event;
+    const recordData = (currentMedicalRecord.data as Record<string, any>) || {};
+    const formConfig = (event.formConfig as any) || {};
     const customCategories = Array.isArray(formConfig.customCategories) ? formConfig.customCategories : [];
 
     // Merge standard and custom categories
@@ -159,9 +167,9 @@ export default async function PrintStudentPage(props: {
             {/* Minimal Slip Header */}
             <div className="text-center border-b-2 border-black pb-4 mb-4">
                 <h1 className="text-xl font-bold uppercase underline">AIIMS BHATINDA - HEALTH SLIP</h1>
-                <p className="text-xs mt-1">{student.event.schoolDetails}</p>
+                <p className="text-xs mt-1">{event.schoolDetails}</p>
                 <div className="flex justify-between text-[10px] mt-2 font-bold">
-                    <span>Date: {new Date(student.event.eventDate).toLocaleDateString()}</span>
+                    <span>Date: {new Date(event.eventDate).toLocaleDateString()}</span>
                     <span>Type: {mode === 'referred' ? 'REFERRAL SLIP' : 'HEALTH RECORD'}</span>
                 </div>
             </div>
@@ -170,8 +178,8 @@ export default async function PrintStudentPage(props: {
             <div className="border-b border-black pb-2 mb-4 text-xs">
                 <div className="grid grid-cols-2 gap-y-1">
                     <p><strong>NAME:</strong> {student.firstName} {student.lastName}</p>
-                    <p><strong>CLASS:</strong> {student.classSec}</p>
-                    <p><strong>AGE/SEX:</strong> {student.age}Y / {student.gender}</p>
+                    <p><strong>CLASS:</strong> {recordData.general_examination_merged?.classSection || "N/A"}</p>
+                    <p><strong>AGE/SEX:</strong> {recordData.general_examination_merged?.age || "N/A"}Y / {student.gender}</p>
                     {/* ID Removed as requested */}
                 </div>
             </div>

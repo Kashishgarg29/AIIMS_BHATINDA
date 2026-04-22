@@ -19,13 +19,11 @@ export default async function AdminObservationStudentsPage({ params }: { params:
     const event = await (prisma.event as any).findUnique({
         where: { id: eventId },
         include: {
-            students: {
+            medicalRecords: {
                 include: {
-                    medicalRecord: {
-                        select: { status: true, data: true }
-                    }
+                    student: true
                 },
-                orderBy: { firstName: "asc" }
+                orderBy: { student: { firstName: "asc" } }
             }
         }
     });
@@ -41,19 +39,19 @@ export default async function AdminObservationStudentsPage({ params }: { params:
         general_examination_merged: "General"
     };
 
-    const observationStudents = (event.students as any[]).filter(stud => {
-        const data = stud.medicalRecord?.data as Record<string, any> | null;
+    const observationStudents = (event.medicalRecords as any[]).filter(mr => {
+        const data = mr.data as Record<string, any> | null;
         if (!data) return false;
         return Object.values(data).some((catData: any) => catData?.status_nor === 'O');
-    }).map((stud: any) => {
-        const data = stud.medicalRecord?.data as Record<string, any>;
+    }).map((mr: any) => {
+        const data = mr.data as Record<string, any>;
         const depts = Object.entries(data || {})
             .filter(([, catData]: any) => catData?.status_nor === 'O')
             .map(([key]) => DEPT_MAP[key] || key);
         return {
-            id: stud.id,
-            name: `${stud.firstName} ${stud.lastName}`,
-            classSec: stud.classSec,
+            id: mr.student.id,
+            name: `${mr.student.firstName} ${mr.student.lastName}`,
+            classSec: data?.general_examination_merged?.classSection || "N/A",
             depts,
         };
     });

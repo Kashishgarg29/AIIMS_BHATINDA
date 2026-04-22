@@ -32,17 +32,24 @@ export default async function PocStudentRecordMasterView(props: {
         : `/poc/workspace/${eventId}`;
     const session = await getServerSession(authOptions);
 
-    const student = await prisma.student.findUnique({
-        where: { id: studentId, eventId },
-        include: { medicalRecord: true }
+    const medicalRecord = await prisma.medicalRecord.findUnique({
+        where: {
+            studentId_eventId: {
+                studentId,
+                eventId
+            }
+        },
+        include: {
+            student: true,
+            event: true
+        }
     });
 
-    const event = await (prisma.event as any).findUnique({
-        where: { id: eventId },
-        select: { eventDate: true, formConfig: true }
-    });
-
-    if (!student) return notFound();
+    if (!medicalRecord) return notFound();
+    
+    const student = medicalRecord.student;
+    const event = medicalRecord.event;
+    const currentMedicalRecord = medicalRecord;
 
     const formConfig = ((event as any)?.formConfig as Record<string, string[]>) || {};
 
@@ -58,7 +65,7 @@ export default async function PocStudentRecordMasterView(props: {
         dynamicStatus = "PAST";
     }
 
-    const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+    const recordData = (currentMedicalRecord?.data as Record<string, any>) || {};
 
     // Extract BMI data
     const genExamData = recordData.general_examination_merged || {};
@@ -140,7 +147,7 @@ export default async function PocStudentRecordMasterView(props: {
         ? ALL_CATEGORY_DEFINITIONS.map(c => c.id)
         : ["general_examination_merged", "vaccination_details", "symptoms"];
     const completionPercentage = Math.round((completedCount / ALL_CATEGORY_DEFINITIONS.length) * 100);
-    const globalStatus = student.medicalRecord?.status || "PENDING";
+    const globalStatus = currentMedicalRecord?.status || "PENDING";
 
     return (
         <>

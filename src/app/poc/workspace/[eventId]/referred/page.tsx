@@ -15,13 +15,9 @@ export default async function PocReferredStudentsPage({ params }: { params: Prom
     const event = await (prisma.event as any).findUnique({
         where: { id: eventId },
         include: {
-            students: {
-                include: {
-                    medicalRecord: {
-                        select: { status: true, data: true }
-                    }
-                },
-                orderBy: { firstName: "asc" }
+            medicalRecords: {
+                include: { student: true },
+                orderBy: { student: { firstName: 'asc' } }
             }
         }
     });
@@ -44,7 +40,13 @@ export default async function PocReferredStudentsPage({ params }: { params: Prom
         general_examination_merged: "General"
     };
 
-    const referredStudents = (event.students as any[]).filter(stud => {
+    const students = (event.medicalRecords as any[]).map(mr => ({
+        ...mr.student,
+        medicalRecord: mr,
+        classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A"
+    }));
+
+    const referredStudents = students.filter(stud => {
         const data = stud.medicalRecord?.data as Record<string, any> | null;
         if (!data) return false;
         return Object.values(data).some((catData: any) => catData?.status_nor === 'R');

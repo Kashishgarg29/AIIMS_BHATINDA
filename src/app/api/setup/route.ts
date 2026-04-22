@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import bcryptjs from "bcryptjs";
+import { format } from "date-fns";
 
 export async function GET() {
   try {
@@ -51,38 +52,41 @@ export async function GET() {
       },
     });
 
-    // 5. Create some dummy students
-    const students = await Promise.all([
-      prisma.student.create({
-        data: {
-          eventId: event.id,
-          firstName: "Alice",
-          lastName: "Johnson",
-          classSec: "10-A",
-          age: 10,
-          gender: "FEMALE",
-        },
-      }),
-      prisma.student.create({
-        data: {
-          eventId: event.id,
-          firstName: "Bob",
-          lastName: "Smith",
-          classSec: "10-B",
-          age: 10,
-          gender: "MALE",
-        },
-      }),
-    ]);
+    // 5. Create some dummy students with UIDs
+    const studentsData = [
+      { firstName: "Alice", lastName: "Johnson", dob: new Date("2016-05-12"), gender: "FEMALE" as const },
+      { firstName: "Bob", lastName: "Smith", dob: new Date("2016-11-20"), gender: "MALE" as const },
+    ];
 
-    // 6. Give Alice an empty medical record
-    await prisma.medicalRecord.create({
-      data: {
-        studentId: students[0].id,
-        eventId: event.id,
-        data: {}
-      }
-    })
+    const students = await Promise.all(studentsData.map(async (s, i) => {
+      return prisma.student.create({
+        data: {
+          studentUID: `${format(s.dob, "ddMMyyyy")}-00${i+1}`,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          dateOfBirth: s.dob,
+          gender: s.gender,
+          schoolName: "Greenwood High School",
+        }
+      });
+    }));
+
+    // 6. Link students to event via medical records
+    await Promise.all(students.map(s => 
+      prisma.medicalRecord.create({
+        data: {
+          studentId: s.id,
+          eventId: event.id,
+          data: {
+            general_examination_merged: {
+              dob: format(s.dateOfBirth!, "yyyy-MM-dd"),
+              classSection: "4-B",
+              age: "10"
+            }
+          }
+        }
+      })
+    ));
 
     return NextResponse.json({
       success: true,

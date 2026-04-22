@@ -31,15 +31,20 @@ export default async function AdminStudentView({
     const student = await prisma.student.findUnique({
         where: { id: studentId },
         include: {
-            medicalRecord: true,
-            event: true
+            medicalRecords: {
+                where: { eventId },
+                include: { event: true },
+                take: 1
+            }
         }
     });
 
-    if (!student) notFound();
+    if (!student || student.medicalRecords.length === 0) notFound();
+    const currentMedicalRecord = student.medicalRecords[0];
+    const event = currentMedicalRecord.event;
 
-    const formConfig = (student.event.formConfig as any) || {};
-    const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+    const formConfig = (event.formConfig as any) || {};
+    const recordData = (currentMedicalRecord.data as Record<string, any>) || {};
 
     let completedCount = 0;
 
@@ -84,7 +89,7 @@ export default async function AdminStudentView({
     });
 
     const completionPercentage = Math.round((completedCount / ALL_CATEGORY_DEFINITIONS.length) * 100);
-    const globalStatus = student.medicalRecord?.status || "PENDING";
+    const globalStatus = currentMedicalRecord?.status || "PENDING";
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">

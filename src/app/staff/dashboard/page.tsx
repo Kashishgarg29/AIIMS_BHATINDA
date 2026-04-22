@@ -16,7 +16,7 @@ export default async function StaffDashboard() {
   if (!session?.user?.id) return null;
 
   // Fetch events where user is assigned staff
-  const events = await (prisma.event as any).findMany({
+  const events = await prisma.event.findMany({
     where: {
       eventStaff: { some: { userId: session.user.id } },
       status: { not: "CANCELLED" }
@@ -26,16 +26,17 @@ export default async function StaffDashboard() {
         include: { user: true }
       },
       _count: {
-        select: { students: true }
+        select: { medicalRecords: true }
       },
-      students: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          classSec: true,
-          medicalRecord: {
-            select: { data: true }
+      medicalRecords: {
+        include: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              studentUID: true,
+            }
           }
         }
       }
@@ -46,7 +47,7 @@ export default async function StaffDashboard() {
   });
 
   // Map to the format expected by the UI
-  const assignedEvents = (events as any[]).map(event => {
+  const assignedEvents = events.map(event => {
     // Calculate Dynamic Status
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -69,42 +70,42 @@ export default async function StaffDashboard() {
       general_examination_merged: "General"
     };
 
-    const referredStudents = (event.students as any[]).filter(stud => {
-      const data = stud.medicalRecord?.data as Record<string, any> | null;
+    const referredStudents = event.medicalRecords.filter(mr => {
+      const data = mr.data as Record<string, any> | null;
       if (!data) return false;
       return Object.values(data).some((catData: any) => catData?.status_nor === 'R');
-    }).map((stud: any) => {
-      const data = stud.medicalRecord?.data as Record<string, any>;
+    }).map(mr => {
+      const data = mr.data as Record<string, any>;
       const depts = Object.entries(data || {})
         .filter(([, catData]: any) => catData?.status_nor === 'R')
         .map(([key]) => DEPT_MAP[key] || key);
       return {
-        id: stud.id,
-        name: `${stud.firstName} ${stud.lastName}`,
-        classSec: stud.classSec,
+        id: mr.student.id,
+        name: `${mr.student.firstName} ${mr.student.lastName}`,
+        classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A",
         depts,
       };
     });
 
-    const observationStudents = (event.students as any[]).filter(stud => {
-      const data = stud.medicalRecord?.data as Record<string, any> | null;
+    const observationStudents = event.medicalRecords.filter(mr => {
+      const data = mr.data as Record<string, any> | null;
       if (!data) return false;
       return Object.values(data).some((catData: any) => catData?.status_nor === 'O');
-    }).map((stud: any) => {
-      const data = stud.medicalRecord?.data as Record<string, any>;
+    }).map(mr => {
+      const data = mr.data as Record<string, any>;
       const depts = Object.entries(data || {})
         .filter(([, catData]: any) => catData?.status_nor === 'O')
         .map(([key]) => DEPT_MAP[key] || key);
       return {
-        id: stud.id,
-        name: `${stud.firstName} ${stud.lastName}`,
-        classSec: stud.classSec,
+        id: mr.student.id,
+        name: `${mr.student.firstName} ${mr.student.lastName}`,
+        classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A",
         depts,
       };
     });
 
     const eventHeadId = (event.formConfig as any)?.eventHeadId;
-    const eventHead = (event.eventStaff as any[]).find(s => s.user.id === eventHeadId)?.user?.fullName || "Not Assigned";
+    const eventHead = event.eventStaff.find(s => s.user.id === eventHeadId)?.user?.fullName || "Not Assigned";
     const isHead = eventHeadId === session.user.id;
 
     return {
@@ -113,7 +114,7 @@ export default async function StaffDashboard() {
       date: event.eventDate,
       location: "Main Campus",
       status: dynamicStatus,
-      studentCount: event._count.students,
+      studentCount: event._count.medicalRecords,
       referredCount: referredStudents.length,
       referredStudents,
       observationCount: observationStudents.length,

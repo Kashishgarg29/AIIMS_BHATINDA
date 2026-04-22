@@ -31,14 +31,24 @@ export default async function PocCategoryEditForm({ params }: { params: Promise<
         // Let's allow view, but it's completely locked out.
     }
 
-    const student = await prisma.student.findUnique({
-        where: { id: studentId, eventId },
-        include: { medicalRecord: true }
+    const medicalRecord = await prisma.medicalRecord.findUnique({
+        where: {
+            studentId_eventId: {
+                studentId,
+                eventId
+            }
+        },
+        include: {
+            student: true,
+            event: true
+        }
     });
 
-    if (!student) return notFound();
+    if (!medicalRecord) return notFound();
+    const student = medicalRecord.student;
+    const currentMedicalRecord = medicalRecord;
 
-    const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+    const recordData = (currentMedicalRecord.data as Record<string, any>) || {};
     const categoryData = recordData[category] || {};
 
     const requiredFields = formConfig[category] || [];

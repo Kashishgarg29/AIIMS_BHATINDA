@@ -6,6 +6,7 @@ import { Users, FileText, CalendarPlus, CheckCircle, XCircle, ArrowRight } from 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getPendingRequests, getMedicalStaff } from "@/lib/actions/admin-actions";
+import { getAdminAnalyticsData } from "@/lib/actions/analytics-actions";
 import { prisma } from "@/lib/db/prisma";
 import Link from "next/link";
 
@@ -15,6 +16,8 @@ import { CreateEventButton } from "@/components/admin/CreateEventButton";
 import { StaffDirectoryClient } from "@/components/admin/directory/StaffDirectoryClient";
 import { RealTimeRefresher } from "@/components/shared/RealTimeRefresher";
 import { AdminChangePasswordButton } from "@/components/admin/AdminChangePasswordButton";
+import { AnalyticsDashboard } from "@/components/admin/analytics/AnalyticsDashboard";
+import { BarChart3 } from "lucide-react";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -22,6 +25,7 @@ export default async function AdminDashboard() {
   // Fetch real data from PostgreSQL
   const pendingRequests = await getPendingRequests();
   const medicalStaff = await getMedicalStaff();
+  const analyticsResult = await getAdminAnalyticsData();
 
   // Fetch active events for the All Events tab
   const allEvents = await prisma.event.findMany({
@@ -35,19 +39,19 @@ export default async function AdminDashboard() {
       eventStaff: {
         include: { user: true }
       },
-      students: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          classSec: true,
-          medicalRecord: {
-            select: { data: true }
+      medicalRecords: {
+        include: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            }
           }
         }
       },
       _count: {
-        select: { eventStaff: true, students: true }
+        select: { eventStaff: true, medicalRecords: true }
       }
     }
   });
@@ -66,20 +70,21 @@ export default async function AdminDashboard() {
     const eventHeadId = (event.formConfig as any)?.eventHeadId;
     const eventHead = (event.eventStaff as any[]).find((s: any) => s.user.id === eventHeadId)?.user?.fullName || "Not Assigned";
 
-    const referredCount = event.students.filter((stud: any) => {
-      const data = stud.medicalRecord?.data as Record<string, any> | null;
+    const referredCount = (event.medicalRecords as any[]).filter((mr: any) => {
+      const data = mr.data as Record<string, any> | null;
       if (!data) return false;
       return Object.values(data).some((catData: any) => catData?.status_nor === 'R');
     }).length;
 
-    const observationCount = event.students.filter((stud: any) => {
-      const data = stud.medicalRecord?.data as Record<string, any> | null;
+    const observationCount = (event.medicalRecords as any[]).filter((mr: any) => {
+      const data = mr.data as Record<string, any> | null;
       if (!data) return false;
       return Object.values(data).some((catData: any) => catData?.status_nor === 'O');
     }).length;
 
     return {
       ...event,
+      studentsCount: event._count.medicalRecords,
       pocName: event.pocName,
       eventHeadName: eventHead,
       referredCount,
@@ -92,7 +97,7 @@ export default async function AdminDashboard() {
       <RealTimeRefresher />
       <Navbar role={session?.user?.role || "ADMIN"} userName={session?.user?.name || "Admin User"} />
 
-      <Tabs defaultValue="requests" orientation="vertical" className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <Tabs defaultValue="analytics" orientation="vertical" className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Full Sidebar */}
         <aside className="w-full md:w-64 bg-white border-r flex-shrink-0">
           <div className="py-4 md:py-6 h-full flex flex-col pr-4 md:pr-0">
@@ -100,6 +105,9 @@ export default async function AdminDashboard() {
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Admin Portal</h2>
             </div>
             <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 justify-start items-stretch shrink-0 space-y-1">
+              <TabsTrigger value="analytics" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
+                <BarChart3 className="h-5 w-5 shrink-0" /> <span className="truncate">Analytics</span>
+              </TabsTrigger>
               <TabsTrigger value="requests" className="w-full justify-start px-6 py-2.5 text-sm md:text-base font-medium data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 data-[state=active]:font-semibold flex gap-3 rounded-full md:rounded-l-none md:rounded-r-full transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-0">
                 <FileText className="h-5 w-5 shrink-0" /> <span className="truncate">Camp Requests</span>
                 {pendingRequests.length > 0 && (
@@ -126,6 +134,15 @@ export default async function AdminDashboard() {
         <main className="flex-1 w-full overflow-y-auto p-4 md:p-8 bg-slate-50">
           <div className="max-w-6xl mx-auto">
             <div className="w-full pb-12">
+              <TabsContent value="analytics" className="mt-0 outline-none">
+                {analyticsResult.success && analyticsResult.data ? (
+                  <AnalyticsDashboard data={analyticsResult.data} />
+                ) : (
+                  <div className="p-8 text-center bg-white rounded-2xl shadow-sm">
+                    <p className="text-slate-500">Failed to load analytics data.</p>
+                  </div>
+                )}
+              </TabsContent>
               <TabsContent value="requests" className="mt-0 space-y-4 outline-none">
                 <RequestsTabClient
                   requests={pendingRequests}

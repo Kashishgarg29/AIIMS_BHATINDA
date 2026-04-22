@@ -13,18 +13,20 @@ export default async function PocEventWorkspace({ params }: { params: Promise<{ 
     const event = await (prisma.event as any).findUnique({
         where: { id: eventId },
         include: {
-            students: {
-                include: {
-                    medicalRecord: {
-                        select: { status: true, updatedAt: true, data: true }
-                    }
-                },
-                orderBy: { firstName: "asc" }
+            medicalRecords: {
+                include: { student: true },
+                orderBy: { student: { firstName: 'asc' } }
             }
         }
     });
 
     if (!event) return notFound();
+
+    const students = (event.medicalRecords as any[]).map(mr => ({
+        ...mr.student,
+        medicalRecord: mr,
+        classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A"
+    }));
 
     const isPOC = event.pocEmail?.toLowerCase() === session?.user?.email?.toLowerCase();
     const isAdmin = session?.user?.role === "ADMIN";
@@ -39,7 +41,7 @@ export default async function PocEventWorkspace({ params }: { params: Promise<{ 
             schoolName={event.schoolDetails}
             eventDate={event.eventDate}
             location="Main Campus" // Fallback since it's not in schema currently
-            students={event.students}
+            students={students}
             pocEmail={event.pocEmail || "Not Assigned"}
         />
     );

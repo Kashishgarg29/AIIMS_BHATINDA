@@ -29,9 +29,9 @@ export default async function AdminEventDetails({
       eventStaff: {
         include: { user: true }
       },
-      students: {
-        include: { medicalRecord: true },
-        orderBy: [{ classSec: 'asc' }, { lastName: 'asc' }]
+      medicalRecords: {
+        include: { student: true },
+        orderBy: { student: { firstName: 'asc' } }
       }
     }
   });
@@ -79,9 +79,9 @@ export default async function AdminEventDetails({
   const currentSchoolContactId = (event.formConfig as any)?.schoolContactId;
 
   // Calculate statistics over the joined tables
-  const totalStudents = event.students.length;
+  const totalStudents = event.medicalRecords.length;
   // Count how many students have a medical record that is fully completed
-  const completedRecords = event.students.filter((s: any) => s.medicalRecord?.status === "COMPLETED").length;
+  const completedRecords = (event.medicalRecords as any[]).filter((mr: any) => mr.status === "COMPLETED").length;
   const progressPercent = totalStudents > 0 ? Math.round((completedRecords / totalStudents) * 100) : 0;
 
   // Compute Dynamic Status

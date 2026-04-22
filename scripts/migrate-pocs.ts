@@ -8,9 +8,9 @@ async function migratePocs() {
     const events = await (prisma.event as any).findMany({
       select: { pocEmail: true }
     });
-    
+
     const pocEmails = Array.from(new Set(events.map((e: any) => e.pocEmail.toLowerCase())));
-    
+
     if (pocEmails.length === 0) {
       console.log('No POC emails found in events.');
       return;

@@ -64,17 +64,17 @@ enum RecordStatus {
 }
 
 model User {
-  id            String             @id @default(uuid())
-  email         String             @unique
-  passwordHash  String
-  fullName      String
-  role          Role               @default(MEDICAL_STAFF)
-  department    Department?
-  isActive      Boolean            @default(true)
-  createdAt     DateTime           @default(now())
-  createdEvents Event[]            @relation("EventCreator")
+  id             String             @id @default(uuid())
+  email          String             @unique
+  passwordHash   String
+  fullName       String
+  role           Role               @default(MEDICAL_STAFF)
+  department     Department?
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  createdEvents  Event[]            @relation("EventCreator")
   assignedEvents EventStaff[]
-  auditLogs     CategoryAuditLog[]
+  auditLogs      CategoryAuditLog[]
 }
 
 model HealthCampRequest {
@@ -91,19 +91,18 @@ model HealthCampRequest {
 }
 
 model Event {
-  id            String       @id @default(uuid())
-  schoolDetails String
-  eventDate     DateTime
-  pocName       String
-  pocEmail      String
-  pocPhone      String
-  status        EventStatus  @default(UPCOMING)
-  formConfig    Json?        @default("{}")
-  createdBy     String
-  creator       User         @relation("EventCreator", fields: [createdBy], references: [id])
-  createdAt     DateTime     @default(now())
-  eventStaff    EventStaff[]
-  students      Student[]
+  id             String          @id @default(uuid())
+  schoolDetails  String
+  eventDate      DateTime
+  pocName        String
+  pocEmail       String
+  pocPhone       String
+  status         EventStatus     @default(UPCOMING)
+  formConfig     Json?           @default("{}")
+  createdBy      String
+  creator        User            @relation("EventCreator", fields: [createdBy], references: [id])
+  createdAt      DateTime        @default(now())
+  eventStaff     EventStaff[]
   medicalRecords MedicalRecord[]
 }
 
@@ -117,31 +116,30 @@ model EventStaff {
 }
 
 model Student {
-  id             String         @id @default(uuid())
-  eventId        String
+  id             String          @id @default(uuid())
+  studentUID     String          @unique
   firstName      String
   lastName       String
-  classSec       String
-  age            Int
+  dateOfBirth    DateTime?
   gender         Gender
+  schoolName     String
   schoolIdNumber String?
-  event          Event          @relation(fields: [eventId], references: [id])
-  medicalRecord  MedicalRecord?
-
-  @@unique([eventId, firstName, lastName, classSec])
+  medicalRecords MedicalRecord[]
 }
 
 model MedicalRecord {
-  id          String             @id @default(uuid())
-  studentId   String             @unique
-  eventId     String
-  status      RecordStatus       @default(PENDING)
-  data        Json               @default("{}")
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  student     Student            @relation(fields: [studentId], references: [id])
-  event       Event              @relation(fields: [eventId], references: [id])
-  auditLogs   CategoryAuditLog[]
+  id        String             @id @default(uuid())
+  studentId String
+  eventId   String
+  status    RecordStatus       @default(PENDING)
+  data      Json               @default("{}")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  student   Student            @relation(fields: [studentId], references: [id])
+  event     Event              @relation(fields: [eventId], references: [id])
+  auditLogs CategoryAuditLog[]
+
+  @@unique([studentId, eventId])
 }
 
 model CategoryAuditLog {
@@ -165,3 +163,7 @@ model PasswordResetOtp {
 
   @@index([email, otp])
 }
+
+
+
+

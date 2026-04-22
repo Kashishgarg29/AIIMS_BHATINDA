@@ -64,7 +64,13 @@ export function EventDetailManagement({
       .map(([key, _]) => key.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim());
   };
 
-  const filteredStudents = event.students.filter((s: any) => {
+  const students = event.medicalRecords?.map((mr: any) => ({
+    ...mr.student,
+    medicalRecord: mr,
+    classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A"
+  })) || [];
+
+  const filteredStudents = students.filter((s: any) => {
     const q = search.toLowerCase();
     const smatches = s.firstName.toLowerCase().includes(q) ||
       s.lastName.toLowerCase().includes(q) ||
@@ -77,7 +83,7 @@ export function EventDetailManagement({
     return sStatus === statusFilter;
   });
 
-  const inProgressRecords = event.students.filter((s: any) => s.medicalRecord?.status === "IN_PROGRESS").length;
+  const inProgressRecords = (event.medicalRecords as any[] || []).filter((mr: any) => mr.status === "IN_PROGRESS").length;
 
   return (
     <Tabs defaultValue="roster" orientation="vertical" className="flex-1 flex flex-col md:flex-row overflow-hidden text-slate-900 font-sans">

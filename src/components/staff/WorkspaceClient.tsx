@@ -25,10 +25,12 @@ type StudentData = {
   id: string;
   firstName: string;
   lastName: string;
-  classSec: string;
+  studentUID: string;
   gender: string;
-  age: number;
   medicalRecord: { status: string; updatedAt: Date; data?: any } | null;
+  // Dynamic fields derived from current medical record
+  classSec: string;
+  age: number;
 };
 
 export function WorkspaceClient({
@@ -178,22 +180,25 @@ export function WorkspaceClient({
 
   const STATUS_ORDER: Record<string, number> = { PENDING: 0, IN_PROGRESS: 1, COMPLETED: 2 };
 
-  const filteredStudents = students
-    .filter(s => {
-      // 1. Text Search Filter
-      const q = search.toLowerCase();
-      const matchesSearch = s.firstName.toLowerCase().includes(q) ||
-        s.lastName.toLowerCase().includes(q) ||
-        s.classSec.toLowerCase().includes(q);
+  const filteredStudents = students.filter(s => {
+    // 1. Text Search Filter (Name, Class, or UID)
+    const q = search.toLowerCase();
+    const studentUID = (s as any).studentUID?.toLowerCase() || "";
 
-      if (!matchesSearch) return false;
+    const matchesSearch =
+      s.firstName.toLowerCase().includes(q) ||
+      s.lastName.toLowerCase().includes(q) ||
+      s.classSec.toLowerCase().includes(q) ||
+      studentUID.includes(q);
 
-      // 2. Status Filter
-      if (statusFilter === "ALL") return true;
+    if (!matchesSearch) return false;
 
-      const sStatus = s.medicalRecord?.status || "PENDING";
-      return sStatus === statusFilter;
-    })
+    // 2. Status Filter
+    if (statusFilter === "ALL") return true;
+
+    const sStatus = s.medicalRecord?.status || "PENDING";
+    return sStatus === statusFilter;
+  })
     .sort((a, b) => {
       const aStatus = a.medicalRecord?.status || "PENDING";
       const bStatus = b.medicalRecord?.status || "PENDING";
@@ -393,7 +398,7 @@ export function WorkspaceClient({
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search student name or class..."
+                  placeholder="Search name, class, or UID..."
                   className="pl-10 w-full bg-white shadow-sm"
                 />
               </div>
@@ -536,9 +541,10 @@ export function WorkspaceClient({
               <thead className="text-xs text-slate-500 bg-slate-50 uppercase border-b">
                 <tr>
                   <th className="px-6 py-4 font-medium text-center">Student Name</th>
+                  <th className="px-6 py-4 font-medium text-center">Student UID</th>
                   <th className="px-6 py-4 font-medium text-center">Class/Sec</th>
                   <th className="px-6 py-4 font-medium text-center">Gender</th>
-                   <th className="px-6 py-4 font-medium text-center">Status</th>
+                  <th className="px-6 py-4 font-medium text-center">Status</th>
                   <th className="px-6 py-4 font-medium text-center">Reports</th>
                   <th className="px-6 py-4 font-medium text-center hidden md:table-cell">Last Updated</th>
                   <th className="px-6 py-4 font-medium text-center">Action</th>
@@ -569,9 +575,14 @@ export function WorkspaceClient({
                       <td className="px-6 py-4 font-medium text-slate-900 text-center">
                         {student.firstName} {student.lastName}
                       </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200 tracking-wider">
+                          {(student as any).studentUID || "PENDING"}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-slate-600 text-center">{student.classSec}</td>
                       <td className="px-6 py-4 text-slate-600 text-center capitalize">{student.gender?.toLowerCase() || "—"}</td>
-                       <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center">
                         {status === 'COMPLETED' && <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Completed</Badge>}
                         {status === 'IN_PROGRESS' && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200">In Progress</Badge>}
                         {status === 'PENDING' && <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-slate-200">Pending</Badge>}
@@ -617,7 +628,7 @@ export function WorkspaceClient({
                                 className="h-8 w-8 p-0 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(`/print/${student.id}?mode=full`, '_blank');
+                                  window.open(`/print/${student.id}?mode=full&eventId=${eventId}`, '_blank');
                                 }}
                               >
                                 <ScrollText className="h-4 w-4" />
@@ -630,7 +641,7 @@ export function WorkspaceClient({
                                   className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    window.open(`/print/${student.id}?mode=referred`, '_blank');
+                                    window.open(`/print/${student.id}?mode=referred&eventId=${eventId}`, '_blank');
                                   }}
                                 >
                                   <ArrowUpRight className="h-4 w-4" />

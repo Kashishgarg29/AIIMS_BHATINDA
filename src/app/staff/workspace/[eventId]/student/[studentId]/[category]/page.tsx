@@ -31,20 +31,24 @@ export default async function CategoryEditForm({ params }: { params: Promise<{ e
   ];
   if (!validCategories.includes(category)) return notFound();
 
-  // Fetch student and their medical record
+  // Fetch student and their medical records
   const student = await prisma.student.findFirst({
     where: { id: studentId },
     include: {
-      medicalRecord: true
+      medicalRecords: {
+        where: { eventId: eventId }
+      }
     }
   });
+
+  const currentMedicalRecord = student?.medicalRecords[0];
 
 
 
   if (!student) return notFound();
 
   // Extract the specific category JSON data if it exists
-  const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+  const recordData = (currentMedicalRecord?.data as Record<string, any>) || {};
   const categoryData = recordData[category] || {};
 
   // Extract the compulsory fields for this category

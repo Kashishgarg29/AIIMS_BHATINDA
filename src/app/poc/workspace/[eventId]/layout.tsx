@@ -23,13 +23,9 @@ export default async function PocWorkspaceLayout(props: {
       pocName: true,
       pocEmail: true,
       formConfig: true,
-      students: {
-        include: {
-          medicalRecord: {
-            select: { status: true, updatedAt: true, data: true }
-          }
-        },
-        orderBy: { firstName: "asc" }
+      medicalRecords: {
+        include: { student: true },
+        orderBy: { student: { firstName: 'asc' } }
       }
     }
   });
@@ -42,19 +38,24 @@ export default async function PocWorkspaceLayout(props: {
   if (!isAdmin && !isPOC) {
     return redirect("/poc/dashboard");
   }
+  const students = (event.medicalRecords as any[]).map(mr => ({
+    ...mr.student,
+    medicalRecord: mr,
+    classSec: (mr.data as any)?.general_examination_merged?.classSection || "N/A"
+  }));
 
   return (
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       <Navbar role={session?.user?.role || "SCHOOL_POC"} userName={session?.user?.name || "School Representative"} />
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
-        <StudentSidebar 
-          students={event.students} 
-          eventId={eventId} 
+        <StudentSidebar
+          students={students}
+          eventId={eventId}
           formConfig={event.formConfig}
           currentUserId={session?.user?.id || ""}
         />
-        
+
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto bg-slate-50 scroll-smooth">
           {props.children}

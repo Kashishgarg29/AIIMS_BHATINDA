@@ -33,13 +33,25 @@ export default async function StudentRecordMasterView(props: {
       : `/staff/workspace/${eventId}`;
   const session = await getServerSession(authOptions);
 
-  // Fetch full student and medical record from DB
-  const student = await prisma.student.findFirst({
+  // Fetch full student and medical history from DB
+  const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
-      medicalRecord: true,
+      medicalRecords: {
+        include: {
+          event: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }
     }
   });
+
+  if (!student) return notFound();
+
+  // Extract the specific medical record for the current event
+  const currentMedicalRecord = student.medicalRecords.find(r => r.eventId === eventId);
 
   const event = await (prisma.event as any).findUnique({
     where: { id: eventId },
@@ -66,7 +78,7 @@ export default async function StudentRecordMasterView(props: {
 
 
   // Determine completions from JSONB data and Config
-  const recordData = (student.medicalRecord?.data as Record<string, any>) || {};
+  const recordData = (currentMedicalRecord?.data as Record<string, any>) || {};
 
   // Extract BMI data
   const genExamData = recordData.general_examination_merged || {};
@@ -154,7 +166,7 @@ export default async function StudentRecordMasterView(props: {
       .map(cat => cat.id);
 
   const completionPercentage = Math.round((completedCount / ALL_CATEGORY_DEFINITIONS.length) * 100);
-  const globalStatus = student.medicalRecord?.status || "PENDING";
+  const globalStatus = currentMedicalRecord?.status || "PENDING";
 
   return (
     <div className="flex flex-col">
@@ -177,6 +189,7 @@ export default async function StudentRecordMasterView(props: {
           userName={session?.user?.name || "Medical Staff"}
           userRole={session?.user?.role}
           formConfig={formConfig}
+          medicalHistory={student.medicalRecords}
       />
     </div>
   );

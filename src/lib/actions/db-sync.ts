@@ -62,7 +62,7 @@ export async function saveMedicalCategory(
     if (!event) return { success: false, error: "Event not found." };
 
     let record = await prisma.medicalRecord.findUnique({
-      where: { studentId },
+      where: { studentId_eventId: { studentId, eventId } },
     });
 
     if (!record) {

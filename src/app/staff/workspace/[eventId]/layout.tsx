@@ -14,7 +14,7 @@ export default async function WorkspaceLayout(props: {
 
   if (!session) return redirect("/login");
 
-  const event = await (prisma.event as any).findUnique({
+  const event = await prisma.event.findUnique({
     where: { id: eventId },
     select: {
       id: true,
@@ -29,18 +29,26 @@ export default async function WorkspaceLayout(props: {
           }
         }
       },
-      students: {
+      medicalRecords: {
         include: {
-          medicalRecord: {
-            select: { status: true, updatedAt: true, data: true }
-          }
+          student: true
         },
-        orderBy: { firstName: "asc" }
+        orderBy: { student: { firstName: "asc" } }
       }
     }
   });
 
   if (!event) return notFound();
+
+  // Map medicalRecords to students format for the sidebar
+  const sidebarStudents = event.medicalRecords.map(mr => ({
+    ...mr.student,
+    medicalRecord: {
+      status: mr.status,
+      updatedAt: mr.updatedAt,
+      data: mr.data
+    }
+  }));
 
   const isStaff = event.eventStaff.some((s: any) => s.user.id === session?.user?.id);
   const isAdmin = session?.user?.role === "ADMIN";
@@ -54,13 +62,13 @@ export default async function WorkspaceLayout(props: {
       <Navbar role={session?.user?.role || "MEDICAL_STAFF"} userName={session?.user?.name || "Dr. Staff"} />
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
-        <StudentSidebar 
-          students={event.students} 
-          eventId={eventId} 
+        <StudentSidebar
+          students={sidebarStudents as any}
+          eventId={eventId}
           formConfig={event.formConfig}
           currentUserId={session?.user?.id || ""}
         />
-        
+
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto bg-slate-50 scroll-smooth">
           {props.children}
